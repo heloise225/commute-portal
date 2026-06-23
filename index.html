@@ -602,14 +602,43 @@ function buildRoute(members, combined){
     members, reviewPickups:[]};
 }
 
+const CORRIDOR_KM=5;   // 上車點落在「較遠點 → 學校」直線 5km 內即視為「順路」，併入同一條路線
+// 點 p 到「a→b 線段」的垂直距離（km，平面近似）
+function perpDistKm(p,a,b){
+  const ky=110.574, kx=111.320*Math.cos(a.lat*Math.PI/180);
+  const ax=a.lng*kx, ay=a.lat*ky, bx=b.lng*kx, by=b.lat*ky, px=p.lng*kx, py=p.lat*ky;
+  const dx=bx-ax, dy=by-ay, L2=dx*dx+dy*dy;
+  if(L2===0) return Math.hypot(px-ax,py-ay);
+  let t=((px-ax)*dx+(py-ay)*dy)/L2; t=Math.max(0,Math.min(1,t));
+  return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
+}
+// 走廊式（順路）分群：以「上車聚落中心」為單位，凡落在「較遠聚落→學校」直線附近者併成一條
+function corridorGroupClusters(clusters, destC){
+  const arr=clusters.slice().sort((a,b)=> haversine(b.c,destC)-haversine(a.c,destC));
+  const used=new Array(arr.length).fill(false); const groups=[];
+  for(let i=0;i<arr.length;i++){ if(used[i]) continue;
+    const anchor=arr[i].c; const g=[arr[i]]; used[i]=true;
+    for(let j=i+1;j<arr.length;j++){ if(used[j]) continue;
+      if(perpDistKm(arr[j].c, anchor, destC) <= CORRIDOR_KM){ g.push(arr[j]); used[j]=true; }
+    }
+    groups.push(g);
+  }
+  return groups;
+}
+
 function computeRoutes(items){
-  // 第一階段：以目的地（學校 5km）→ 居住走廊（13km）切出單一目的地路線
+  // 第一階段：以目的地（學校 5km）聚合；同目的地內以「順路走廊」切出路線
   const destClusters=clusterPoints(items, d=>({lat:d.schoolLat,lng:d.schoolLng}), 5);
   const routes=[]; const leftover=[];
   destClusters.forEach(dc=>{
-    clusterPoints(dc.members, m=>({lat:m.lat,lng:m.lng}), ORIGIN_KM).forEach(oc=>{
-      if(oc.members.length>=MIN_VIABLE) routes.push(buildRoute(oc.members, false));
-      else leftover.push(...oc.members);   // 無法獨立成線者，留待合併
+    const destC=centroid(dc.members, m=>({lat:m.schoolLat,lng:m.schoolLng}));
+    // 先把同目的地學生依居住地 3km 聚成「上車聚落」（整個聚落不被拆開），再以聚落中心做順路走廊分群
+    const originClusters=clusterPoints(dc.members, m=>({lat:m.lat,lng:m.lng}), 3)
+      .map(oc=>({members:oc.members, c:centroid(oc.members, m=>({lat:m.lat,lng:m.lng}))}));
+    corridorGroupClusters(originClusters, destC).forEach(grp=>{
+      const members=grp.flatMap(x=>x.members);
+      if(members.length>=MIN_VIABLE) routes.push(buildRoute(members, false));
+      else leftover.push(...members);   // 無法獨立成線者，留待合併
     });
   });
   // 第二階段：把無法成線者依「居住地相近」合併；達門檻者成為沿途分段下車的合併共乘線
