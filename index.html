@@ -213,11 +213,11 @@
     <details class="login-demo"><summary>🔎 展示用測試帳號（點開）</summary>
       <table>
         <tr><th>身分</th><th>學校縣市</th><th>學校</th><th>帳號</th><th>密碼</th></tr>
-        <tr><td>管理員</td><td>高雄市</td><td>高雄中學</td><td>admin</td><td>123456</td></tr>
         <tr><td>學生</td><td>臺中市</td><td>臺中一中</td><td>S001</td><td>950312</td></tr>
-        <tr><td>學生</td><td>嘉義市</td><td>嘉義高中</td><td>S002</td><td>960815</td></tr>
-        <tr><td>學生</td><td>臺南市</td><td>新營高中</td><td>S003</td><td>951030</td></tr>
-        <tr><td>教師</td><td>嘉義市</td><td>嘉義高中</td><td>T001</td><td>800101</td></tr>
+        <tr><td>學生</td><td>臺中市</td><td>臺中女中</td><td>S002</td><td>960815</td></tr>
+        <tr><td>教師</td><td>臺中市</td><td>臺中一中</td><td>T001</td><td>800101</td></tr>
+        <tr><td>教師</td><td>臺中市</td><td>臺中女中</td><td>T002</td><td>790203</td></tr>
+        <tr><td>管理員</td><td>高雄市</td><td>高雄中學</td><td>admin</td><td>123456</td></tr>
       </table>
     </details>
     <p class="login-warn">⚠️ 本登入為<b>靜態展示版</b>，帳密存於前端僅供概念演示，非正式資安驗證；正式上線需搭配後端驗證系統。</p>
@@ -302,7 +302,7 @@
     <div class="box">
       <h2>
         <span>跨縣市需求與真實路線地圖</span>
-        <span>選學校看路線：<select id="route-sel"></select></span>
+        <span id="route-sel-wrap">選學校看路線：<select id="route-sel"></select></span>
       </h2>
       <div id="map"></div>
       <div class="legend">
@@ -432,7 +432,7 @@ function haversine(a,b){ const R=6371,t=x=>x*Math.PI/180;
    資料載入
    ========================================================= */
 let VILLAGES={}, SCHOOLS=[], SCHOOL_COUNTIES=[], demands=[];
-const STORE_KEY='cross_county_demands_v4';
+const STORE_KEY='commute_portal_demands_v1';   // 與開放版分開，避免 localStorage 互相干擾
 const ARRIVE=['07:00','07:20','07:20','07:40','07:20'];
 const TIER_COLOR={big:'#2f855a', mid:'#dd6b20', small:'#e0a93b', wait:'#b6a692'};
 
@@ -613,14 +613,14 @@ function initMap(){
 }
 function renderBase(routes, activeSchool){
   baseLayer.clearLayers();
-  // 學校（選了某校時，其他校變灰）
+  // 學校：只畫「目前可見路線」的下車學校（避免出現其他縣市的星星）
   const usedSchools={};
-  demands.forEach(d=>{ if(!usedSchools[d.school]){ usedSchools[d.school]=1;
-    const dim=activeSchool && d.school!==activeSchool;
-    L.marker([d.schoolLat,d.schoolLng],{icon:L.divIcon({className:'',
+  routes.forEach(r=> r.dropoffs.forEach(d=>{ if(!usedSchools[d.name]){ usedSchools[d.name]=1;
+    const dim=activeSchool && d.name!==activeSchool;
+    L.marker([d.lat,d.lng],{icon:L.divIcon({className:'',
       html:`<div class="school-pin" style="${dim?'opacity:.3;filter:grayscale(1)':''}">⭐</div>`,iconSize:[24,24],iconAnchor:[12,12]})})
-      .addTo(baseLayer).bindPopup(`<b>⭐ ${d.school}</b><br>${d.schoolCounty}`);
-  }});
+      .addTo(baseLayer).bindPopup(`<b>⭐ ${d.name}</b><br>${d.county}`);
+  }}));
   // 上車聚落：與所選學校相關者保持紫色，無關者變灰（且不蓋過相關點）
   const activeKeys=new Set();
   if(activeSchool){
@@ -748,7 +748,7 @@ function drawRoutes(routes, fit){
 // 路線選單：依「有需求的學校」選 → 高亮服務該校的路線
 function onRouteSel(val){
   renderBase(currentRoutes, val||null);   // 重新著色：無關上車點變灰
-  if(!val){ drawRoutes(currentRoutes, false); return; }
+  if(!val){ drawRoutes(currentRoutes, true); return; }   // 預設即自動縮放到可見路線
   const rs=currentRoutes.filter(r=>r.dropoffs.some(d=>d.name===val));
   drawRoutes(rs, true);
 }
@@ -881,37 +881,34 @@ function residenceCountiesForSchoolCounty(schoolCounty){
   return Object.keys(VILLAGES).filter(k=> (ZONE_COUNTIES[k]||[]).includes(schoolCounty));
 }
 
+let resTownCounty={};   // 合併縣/市後，記錄每個鄉鎮屬於哪個真實縣市
 function setupCascade(){
   const cSel=document.getElementById('f-county'), tSel=document.getElementById('f-town'), vSel=document.getElementById('f-village');
-  const scSel=document.getElementById('f-scounty'), sSel=document.getElementById('f-school');
-  // 學生：居住縣市只列出「就學區能就讀本校縣市」的縣市；其他角色列全部
-  const resCounties=(SESSION&&SESSION.role==='student') ? residenceCountiesForSchoolCounty(SESSION.county) : Object.keys(VILLAGES);
-  fillSelect(cSel, resCounties, '請選擇縣市');
-  scSel.innerHTML=''; scSel.disabled=true;
+  // 居住（上車）縣市：學生＝就學區能就讀本校縣市的縣市（含自己縣市）；其他角色＝全部。縣/市合併呈現。
+  let resCounties;
+  if(SESSION && SESSION.role==='student'){
+    const set=new Set(residenceCountiesForSchoolCounty(SESSION.county));
+    if(VILLAGES[SESSION.county]) set.add(SESSION.county);   // 確保自己縣市可填
+    resCounties=[...set];
+  } else { resCounties=Object.keys(VILLAGES); }
+  fillSelect(cSel, mergedList(resCounties), '請選擇縣市');
 
-  cSel.onchange=()=>{ const c=cSel.value;
-    if(c){
-      fillSelect(tSel, Object.keys(VILLAGES[c]), '請選擇鄉鎮市區'); tSel.disabled=false;
-      // 依就學區限制可選的學校縣市
-      fillSelect(scSel, allowedSchoolCounties(c), '請選擇學校縣市'); scSel.disabled=false;
-    } else {
-      tSel.innerHTML=''; tSel.disabled=true; scSel.innerHTML=''; scSel.disabled=true;
-    }
-    vSel.innerHTML=''; vSel.disabled=true; sSel.innerHTML=''; sSel.disabled=true; pickedHome=null;
+  cSel.onchange=()=>{ const label=cSel.value;
+    resTownCounty={};
+    if(label){
+      const reals=mergedToReal(label).filter(r=>VILLAGES[r]);
+      const towns=[];
+      reals.forEach(r=> Object.keys(VILLAGES[r]).forEach(t=>{ if(!(t in resTownCounty)){ resTownCounty[t]=r; towns.push(t); } }));
+      fillSelect(tSel, towns, '請選擇鄉鎮市區'); tSel.disabled=false;
+    } else { tSel.innerHTML=''; tSel.disabled=true; }
+    vSel.innerHTML=''; vSel.disabled=true; pickedHome=null;
   };
-  tSel.onchange=()=>{ const c=cSel.value, t=tSel.value;
-    if(t){ fillSelect(vSel, VILLAGES[c][t], '請選擇里／村'); vSel.disabled=false; }
+  tSel.onchange=()=>{ const t=tSel.value, c=resTownCounty[t];
+    if(t&&c){ fillSelect(vSel, VILLAGES[c][t], '請選擇里／村'); vSel.disabled=false; }
     else { vSel.innerHTML=''; vSel.disabled=true; }
     pickedHome=null;
   };
   vSel.onchange=()=>{ pickedHome=null; document.getElementById('f-ok').textContent=''; };
-
-  scSel.onchange=()=>{ const c=scSel.value;
-    if(c){ const list=SCHOOLS.filter(s=>s.county===c);
-      sSel.innerHTML=`<option value="">請選擇學校</option>`+list.map(s=>`<option value="${s.name}">${s.short||s.name}</option>`).join('');
-      sSel.disabled=false; }
-    else { sSel.innerHTML=''; sSel.disabled=true; }
-  };
 }
 
 /* 地圖微調家點 */
@@ -967,8 +964,8 @@ function setupForm(){
   document.getElementById('route-sel').onchange=e=>onRouteSel(e.target.value);
 
   document.getElementById('f-submit').onclick=async()=>{
-    const county=document.getElementById('f-county').value;
     const town=document.getElementById('f-town').value;
+    const county=resTownCounty[town] || document.getElementById('f-county').value;   // 合併縣/市 → 還原真實縣市
     const village=document.getElementById('f-village').value;
     // 學生：學校固定為登入學校；其他角色：用下拉選的學校
     const schoolName=(SESSION&&SESSION.role==='student') ? SESSION.school : document.getElementById('f-school').value;
@@ -1019,31 +1016,36 @@ function setOverlayShow(show){ document.getElementById('overlay').style.display=
 const DEMO_ACCOUNTS=[
   {role:'admin',   county:'高雄市', school:'市立高雄中學', account:'admin', password:'123456'},
   {role:'student', county:'臺中市', school:'市立臺中一中', account:'S001', password:'950312'},
-  {role:'student', county:'嘉義市', school:'國立嘉義高中', account:'S002', password:'960815'},
-  {role:'student', county:'臺南市', school:'國立新營高中', account:'S003', password:'951030'},
-  {role:'teacher', county:'嘉義市', school:'國立嘉義高中', account:'T001', password:'800101'},
-  {role:'teacher', county:'臺中市', school:'市立臺中一中', account:'T002', password:'790203'},
+  {role:'student', county:'臺中市', school:'市立臺中女中', account:'S002', password:'960815'},
+  {role:'teacher', county:'臺中市', school:'市立臺中一中', account:'T001', password:'800101'},
+  {role:'teacher', county:'臺中市', school:'市立臺中女中', account:'T002', password:'790203'},
 ];
+// 縣/市合併寫法（避免學生選錯縣/市而漏看學校）
+const MERGE_MEMBERS={'嘉義縣/市':['嘉義縣','嘉義市'], '新竹縣/市':['新竹市','新竹縣']};
+const MERGE_GROUPS={'嘉義縣':'嘉義縣/市','嘉義市':'嘉義縣/市','新竹縣':'新竹縣/市','新竹市':'新竹縣/市'};
+const mergedLabel=c=>MERGE_GROUPS[c]||c;
+const mergedToReal=l=>MERGE_MEMBERS[l]||[l];
+function mergedList(counties){ const out=[], seen=new Set(); counties.forEach(c=>{const l=mergedLabel(c); if(!seen.has(l)){seen.add(l); out.push(l);}}); return out; }
 let SESSION=null;
 const ROLE_TXT={student:'學生', teacher:'教師', admin:'管理員'};
 function schoolShort(name){ const s=SCHOOLS.find(x=>x.name===name); return s?(s.short||s.name):name; }
 
 function buildLogin(){
   const cc=document.getElementById('lg-county'), cs=document.getElementById('lg-school');
-  fillSelect(cc, SCHOOL_COUNTIES, '請選擇學校縣市');
-  cc.onchange=()=>{ const c=cc.value;
-    if(c){ const list=SCHOOLS.filter(s=>s.county===c);
-      cs.innerHTML=`<option value="">請選擇學校</option>`+list.map(s=>`<option value="${s.name}">${s.short||s.name}</option>`).join(''); cs.disabled=false; }
+  fillSelect(cc, mergedList(SCHOOL_COUNTIES), '請選擇學校縣市');   // 嘉義縣/市、新竹縣/市 合併
+  cc.onchange=()=>{ const label=cc.value;
+    if(label){ const reals=mergedToReal(label); const list=SCHOOLS.filter(s=>reals.includes(s.county));
+      cs.innerHTML=`<option value="">請選擇學校</option>`+list.map(s=>`<option value="${s.name}">${s.short||s.name}（${s.county}）</option>`).join(''); cs.disabled=false; }
     else { cs.innerHTML=''; cs.disabled=true; } };
   document.getElementById('lg-go').onclick=doLogin;
   document.getElementById('lg-pw').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
 }
 function doLogin(){
-  const county=document.getElementById('lg-county').value, school=document.getElementById('lg-school').value;
+  const school=document.getElementById('lg-school').value;
   const acct=document.getElementById('lg-acct').value.trim(), pw=document.getElementById('lg-pw').value.trim();
   const err=document.getElementById('lg-err');
-  if(!county||!school||!acct||!pw){ err.textContent='請完整填寫所有欄位。'; return; }
-  const m=DEMO_ACCOUNTS.find(a=>a.county===county&&a.school===school&&a.account===acct&&a.password===pw);
+  if(!document.getElementById('lg-county').value||!school||!acct||!pw){ err.textContent='請完整填寫所有欄位。'; return; }
+  const m=DEMO_ACCOUNTS.find(a=>a.school===school&&a.account===acct&&a.password===pw);   // 以學校為準（縣/市已合併）
   if(!m){ err.textContent='帳號、密碼或學校不正確（展示版僅提供測試帳號，請見下方）。'; return; }
   SESSION={role:m.role, county:m.county, school:m.school};
   document.getElementById('login').style.display='none';
@@ -1063,6 +1065,7 @@ function renderSessionBar(){
 function applyRoleUI(){
   if(SESSION.role==='student'){
     document.getElementById('school-pick').style.display='none';
+    const rw=document.getElementById('route-sel-wrap'); if(rw) rw.style.display='none';   // 學生不需切換學校
     document.getElementById('f-hint').innerHTML=`你已登入 <b>${schoolShort(SESSION.school)}</b>，<b>不需選擇學校</b> —— 只要填寫你要<b>上車的居住地區</b>即可。`;
   } else {
     const fb=document.getElementById('form-box'); if(fb) fb.style.display='none';
