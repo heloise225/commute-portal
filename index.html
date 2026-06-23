@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>跨縣市通學需求媒合平台 ｜ 交通平權・教育平權</title>
+
+<!-- 字型：標題 Inter（厚實、值得信賴）＋ 內文 思源黑體 Noto Sans TC -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+  :root{
+    --ink:#3a2a1c;          /* 暖棕近黑，比純黑柔和 */
+    --muted:#8a7765;        /* 暖灰棕 */
+    --line:#efe2d0;         /* 柔沙色邊線 */
+    --panel:#fffdf8;        /* 暖白卡片 */
+    --bg:#faf2e6;           /* 淺沙色背景，取代刺眼純白 */
+    --brand:#ff7a00;        /* 暖陽橘 */
+    --brand-dark:#e85d04;
+    --brand-soft:#fff1df;   /* 淺橘襯底 */
+    --earth:#a0522d;        /* 大地暖棕 */
+    --earth-soft:#f3e6da;
+    --forest:#3f6b34;       /* 深森林綠（標題、文字） */
+    --leaf:#7cab5a;         /* 葉綠 */
+    --leaf-soft:#eef4e2;    /* 淺葉綠襯底 */
+    --bus:#f4b223;          /* 校車黃 */
+    --big:#2f855a;          /* 大型校車－沉穩綠 */
+    --mid:#dd6b20;          /* 中型－焦糖橘 */
+    --small:#e0a93b;        /* 幸福巴士－暖琥珀 */
+    --wait:#b6a692;         /* 待累積－暖灰 */
+    --origin:#a0522d;       /* 居住／上車－大地棕 */
+    --warn:#c0392b;
+    --shadow:0 4px 18px rgba(160,82,45,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0; font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65;}
+  /* 標題：Inter 厚實字型，給人穩重、值得信賴的承諾感 */
+  h1,h2,.route-title,.card .num,.hero h1{font-family:"Inter","Noto Sans TC","Microsoft JhengHei",sans-serif; letter-spacing:.2px;}
+  header.hero{position:relative; overflow:hidden; background:linear-gradient(#fdf3e0,#ffe7c9); min-height:340px;}
+  .hero-art{position:absolute; inset:0; width:100%; height:100%; z-index:0; display:block;}
+  .hero-inner{position:relative; z-index:2; max-width:1200px; margin:0 auto; padding:22px 20px 26px;}
+  .brand{display:inline-flex; align-items:baseline; gap:8px; font-family:"Inter",sans-serif; font-weight:800; font-size:20px; color:var(--forest); margin-bottom:16px; text-shadow:0 1px 2px rgba(255,255,255,.6);}
+  .brand .bus{font-size:24px;}
+  .brand small{font-weight:600; color:var(--earth); font-size:13px;}
+  .hero-card{display:inline-block; max-width:640px; background:rgba(255,253,247,.88); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); border:1px solid rgba(255,255,255,.75); border-radius:24px; padding:18px 22px; box-shadow:0 10px 30px rgba(80,55,25,.16);}
+  .hero h1{margin:0 0 6px; font-size:25px; color:var(--forest);}
+  .hero .tagline{font-size:14.5px; color:var(--ink); margin:0;}
+  .hero .sub{font-size:12.5px; color:var(--muted); margin:8px 0 0;}
+  .privacy{display:inline-block; margin-top:12px; font-size:12.5px; background:var(--leaf-soft); border:1px solid #d6e6c2; color:var(--forest); padding:5px 12px; border-radius:999px;}
+  main{max-width:1200px; margin:0 auto; padding:18px 16px 60px;}
+
+  .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:13px; margin:4px 0 18px;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:16px 18px; box-shadow:var(--shadow);}
+  .card .num{font-size:28px; font-weight:800; line-height:1.1;}
+  .card .lbl{font-size:13px; color:var(--muted); margin-top:2px;}
+  .card.accent .num{color:var(--brand-dark);}
+  .card.km{background:linear-gradient(135deg,var(--brand-soft),var(--earth-soft));}
+  .card.km .num{color:var(--earth);}
+  .card.rv .num{color:#2b88b8;}
+
+  .layout{display:grid; grid-template-columns:1.55fr 1fr; gap:16px;}
+  .box{background:var(--panel); border:1px solid var(--line); border-radius:22px; overflow:hidden; box-shadow:var(--shadow);}
+  .box h2{margin:0; padding:15px 18px; font-size:16px; border-bottom:1px solid var(--line); background:var(--leaf-soft); color:var(--forest); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;}
+  .box h2 select{font-size:13px; padding:6px 10px; border:1px solid var(--line); border-radius:12px; max-width:230px; background:#fff;}
+  #map{height:560px; width:100%;}
+  .legend{display:flex; flex-wrap:wrap; gap:14px; padding:11px 18px; font-size:12.5px; color:var(--muted); border-top:1px solid var(--line);}
+  .legend .dot{display:inline-block; width:11px; height:11px; border-radius:50%; margin-right:5px; vertical-align:middle;}
+
+  .form-body{padding:15px 18px;}
+  .form-body p.hint{font-size:12.5px; color:var(--muted); margin:0 0 12px;}
+  label{display:block; font-size:13px; font-weight:600; margin:10px 0 4px;}
+  select, input{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:13px; font-size:14px; font-family:inherit; background:#fff; color:var(--ink);}
+  select:focus, input:focus{outline:none; border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-soft);}
+  select:disabled{background:var(--earth-soft); color:#b6a692;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .btn{display:inline-block; width:100%; margin-top:14px; padding:12px; border:0; border-radius:14px; font-size:15px; font-weight:700; cursor:pointer; transition:transform .08s ease, background .15s ease;}
+  .btn:active{transform:translateY(1px);}
+  .btn.primary{background:var(--brand-dark); color:#fff; box-shadow:0 4px 12px rgba(255,122,0,.28);} .btn.primary:hover{background:#c2410c;}
+  .btn.primary:disabled{background:#ffc185; cursor:wait; box-shadow:none;}
+  .btn.ghost{background:var(--panel); color:var(--muted); border:1px solid var(--line); margin-top:8px; font-weight:600;}
+  .btn.pick{background:var(--brand-soft); color:var(--brand-dark); border:1px dashed var(--brand); margin-top:8px; font-weight:600;}
+  .btn.pick.active{background:var(--brand); color:#fff; border-style:solid;}
+  .okmsg{font-size:12.5px; margin-top:8px; min-height:16px;}
+  .okmsg.ok{color:var(--big);} .okmsg.warn{color:var(--warn);} .okmsg.info{color:var(--muted);}
+
+  .table-wrap{overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  th,td{padding:10px 12px; text-align:center; border-bottom:1px solid var(--line); white-space:nowrap;}
+  th{background:var(--earth-soft); color:var(--earth); font-weight:700;}
+  td.town{text-align:left; font-weight:700;}
+  tr:hover td{background:var(--brand-soft);}
+  td.zero{color:#d6c6b3;}
+  .tot{background:var(--earth-soft); font-weight:800;}
+  .section-gap{margin-top:16px;}
+
+  .routes{display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:15px 18px;}
+  .route-card{border:1px solid var(--line); border-left-width:6px; border-radius:18px; padding:15px 17px; background:var(--panel); box-shadow:0 2px 10px rgba(160,82,45,.06);}
+  .route-card.big{border-left-color:var(--big);}
+  .route-card.mid{border-left-color:var(--mid);}
+  .route-card.small{border-left-color:var(--small);}
+  .route-card.wait{border-left-color:var(--wait);}
+  .route-head{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;}
+  .route-title{font-size:16px; font-weight:800;}
+  .badge{display:inline-block; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700; color:#fff;}
+  .badge.big{background:var(--big);} .badge.mid{background:var(--mid);} .badge.small{background:var(--small);} .badge.wait{background:var(--wait);}
+  .route-sub{font-size:12.5px; color:var(--muted); margin:4px 0 10px;}
+  .route-meta{font-size:12px; color:var(--brand-dark); margin:0 0 10px; font-weight:700;}
+  .route-cols{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .route-col h4{margin:0 0 6px; font-size:13px; color:var(--earth);}
+  .route-col ol, .route-col ul{margin:0; padding-left:18px; font-size:13px;}
+  .route-col li{margin:3px 0;}
+  .stop-area{font-size:11.5px; color:var(--muted);}
+  .far{color:var(--warn); font-weight:700;}
+  .transfer{font-size:12.5px; background:#fff3e3; border:1px solid #f6d3a8; color:#9a4a0e; border-radius:13px; padding:9px 11px; margin:0 0 10px;}
+  .combined{font-size:12.5px; background:var(--earth-soft); border:1px solid #e7d3bf; color:var(--earth); border-radius:13px; padding:9px 11px; margin:0 0 10px;}
+  .route-card.combined-card{border-left-color:var(--origin);}
+  .review{font-size:12.5px; background:#eef6fb; border:1px solid #cfe6f3; color:#1d5b78; border-radius:13px; padding:9px 11px; margin:0 0 10px;}
+  .review ul{margin:6px 0 0; padding-left:18px;} .review li{margin:2px 0;}
+  .badge.review-badge{background:#2b88b8;}
+  .review-pin{font-size:18px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.4)); animation:busbob 1.3s ease-in-out infinite;}
+
+  footer{max-width:1200px; margin:22px auto 0; padding:0 16px 12px; color:var(--muted); font-size:12.5px;}
+  .footer-card{background:var(--leaf-soft); border:1px solid #dcead0; border-radius:22px; padding:20px 24px; display:grid; grid-template-columns:1.7fr 1fr 1.1fr; gap:20px;}
+  .footer-card h4{margin:0 0 8px; font-size:13.5px; color:var(--forest); font-family:"Inter",sans-serif;}
+  .footer-card p{margin:4px 0; line-height:1.6;}
+  .footer-card ul{list-style:none; padding:0; margin:0;}
+  .footer-card li{margin:4px 0;}
+  .footer-brand{font-family:"Inter",sans-serif; font-weight:800; color:var(--forest); font-size:17px; margin-bottom:6px; display:flex; align-items:center; gap:6px;}
+  footer a{color:var(--brand-dark); text-decoration:none;}
+  @media(max-width:760px){ .footer-card{grid-template-columns:1fr; gap:14px;} }
+
+  .cluster-badge{display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; border-radius:50%; border:2px solid #fff; box-shadow:0 2px 6px rgba(120,60,20,.35);}
+  .school-pin{font-size:20px; filter:drop-shadow(0 1px 2px rgba(120,60,20,.45));}
+
+  /* /delight：校車沿路行駛的微互動 */
+  .bus-anim{font-size:22px; filter:drop-shadow(0 2px 3px rgba(120,60,20,.5)); animation:busbob .9s ease-in-out infinite; will-change:transform;}
+  @keyframes busbob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-2px)}}
+
+  /* 載入遮罩（暖色） */
+  #overlay{position:fixed; inset:0; background:rgba(58,42,28,.82); color:#fff; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; z-index:9999; font-size:15px; text-align:center; padding:20px;}
+  #overlay .spin{width:42px; height:42px; border:4px solid rgba(255,255,255,.3); border-top-color:var(--brand); border-radius:50%; animation:sp 1s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  #overlay small{opacity:.85; font-size:12.5px; max-width:420px;}
+
+  /* 登入畫面 */
+  #login{position:fixed; inset:0; z-index:10000; display:none; align-items:center; justify-content:center; padding:20px;
+    background:linear-gradient(135deg,#ffe7c9,#faf2e6 60%,#eef4e2);}
+  .login-card{width:420px; max-width:100%; max-height:94vh; overflow:auto; background:var(--panel); border:1px solid var(--line);
+    border-radius:24px; padding:24px 26px; box-shadow:0 16px 50px rgba(80,55,25,.25);}
+  .login-head{font-family:"Inter","Noto Sans TC",sans-serif; font-weight:800; font-size:21px; color:var(--forest); display:flex; align-items:center; gap:8px;}
+  .login-sub{font-size:13px; color:var(--muted); margin:6px 0 14px;}
+  .login-card label{display:block; font-size:13px; font-weight:600; margin:11px 0 4px;}
+  .login-card .lmuted{font-weight:400; color:var(--muted); font-size:12px;}
+  .login-card select, .login-card input{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:13px; font-size:14px; font-family:inherit; background:#fff; color:var(--ink);}
+  .login-card select:focus, .login-card input:focus{outline:none; border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-soft);}
+  .login-note{font-size:11.5px; color:var(--earth); background:var(--earth-soft); border-radius:10px; padding:8px 10px; margin-top:10px; line-height:1.5;}
+  .login-err{color:var(--warn); font-size:13px; font-weight:600; margin-top:8px; min-height:18px;}
+  .login-demo{margin-top:12px; font-size:12px;}
+  .login-demo summary{cursor:pointer; color:var(--brand-dark); font-weight:600;}
+  .login-demo table{width:100%; border-collapse:collapse; margin-top:8px; font-size:11.5px;}
+  .login-demo th,.login-demo td{border:1px solid var(--line); padding:4px 6px; text-align:center;}
+  .login-demo th{background:var(--leaf-soft); color:var(--forest);}
+  .login-warn{font-size:11px; color:var(--muted); margin-top:12px; line-height:1.5; border-top:1px dashed var(--line); padding-top:8px;}
+
+  /* 身分列 */
+  #sessionbar{position:sticky; top:0; z-index:500; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    background:var(--forest); color:#fff; padding:8px 16px; font-size:13px;}
+  #sessionbar .who{font-weight:700;}
+  #sessionbar .role{background:rgba(255,255,255,.2); border-radius:999px; padding:2px 10px; font-size:12px; font-weight:700;}
+  #sessionbar .scope{opacity:.92;}
+  #sessionbar .logout{margin-left:auto; background:#fff; color:var(--forest); border:0; border-radius:999px; padding:5px 14px; font-weight:700; font-size:12.5px; cursor:pointer;}
+
+  @media (max-width:900px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .layout{grid-template-columns:1fr;}
+    .routes{grid-template-columns:1fr;}
+    #map{height:420px;}
+    header.hero{min-height:300px;}
+    .hero-card{max-width:none; display:block;}
+    .hero h1{font-size:21px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="overlay">
+  <div class="spin"></div>
+  <div id="overlay-msg">載入中…</div>
+  <small>首次載入會向 OpenStreetMap 查詢示範資料的座標，請稍候數秒。</small>
+</div>
+
+<!-- 登入畫面 -->
+<div id="login">
+  <div class="login-card">
+    <div class="login-head"><span style="font-size:26px">🚌</span> Route to School ｜ 學生登入</div>
+    <p class="login-sub">為避免不實填報，請以學校帳號登入後再填寫通學需求。</p>
+    <label>學校縣市</label>
+    <select id="lg-county"></select>
+    <label>學校</label>
+    <select id="lg-school" disabled></select>
+    <label>帳號　<span class="lmuted">學生：學號／教師：教職員編號</span></label>
+    <input id="lg-acct" autocomplete="off" placeholder="例如 S001 / T001 / admin" />
+    <label>密碼</label>
+    <input id="lg-pw" type="password" autocomplete="off" placeholder="預設為生日六碼" />
+    <p class="login-note">🔑 預設密碼為<b>生日六碼（民國出生年月日）</b>，例如民國 95 年 3 月 12 日 → <b>950312</b>。（示範版未提供變更密碼）</p>
+    <button class="btn primary" id="lg-go" style="margin-top:14px">登入</button>
+    <div class="login-err" id="lg-err"></div>
+    <details class="login-demo"><summary>🔎 展示用測試帳號（點開）</summary>
+      <table>
+        <tr><th>身分</th><th>學校縣市</th><th>學校</th><th>帳號</th><th>密碼</th></tr>
+        <tr><td>管理員</td><td>高雄市</td><td>高雄中學</td><td>admin</td><td>123456</td></tr>
+        <tr><td>學生</td><td>臺中市</td><td>臺中一中</td><td>S001</td><td>950312</td></tr>
+        <tr><td>學生</td><td>嘉義市</td><td>嘉義高中</td><td>S002</td><td>960815</td></tr>
+        <tr><td>學生</td><td>臺南市</td><td>新營高中</td><td>S003</td><td>951030</td></tr>
+        <tr><td>教師</td><td>嘉義市</td><td>嘉義高中</td><td>T001</td><td>800101</td></tr>
+      </table>
+    </details>
+    <p class="login-warn">⚠️ 本登入為<b>靜態展示版</b>，帳密存於前端僅供概念演示，非正式資安驗證；正式上線需搭配後端驗證系統。</p>
+  </div>
+</div>
+
+<!-- 身分列 -->
+<div id="sessionbar" style="display:none"></div>
+
+<header class="hero">
+  <!-- 插畫風橫幅：晨光、綠色山巒、蜿蜒山路、松樹、校車 -->
+  <svg class="hero-art" viewBox="0 0 1200 360" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fef4df"/><stop offset="1" stop-color="#ffe4c0"/>
+      </linearGradient>
+      <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#ffe79a"/><stop offset="1" stop-color="#ffd56b"/>
+      </radialGradient>
+    </defs>
+    <rect width="1200" height="360" fill="url(#sky)"/>
+    <circle cx="1010" cy="92" r="92" fill="#ffe9b0" opacity=".55"/>
+    <circle cx="1010" cy="92" r="50" fill="url(#sun)"/>
+    <!-- 雲 -->
+    <g fill="#fffaf0" opacity=".9">
+      <ellipse cx="230" cy="70" rx="46" ry="18"/><ellipse cx="280" cy="78" rx="36" ry="15"/>
+      <ellipse cx="760" cy="55" rx="40" ry="15"/><ellipse cx="805" cy="62" rx="30" ry="12"/>
+    </g>
+    <!-- 遠山 -->
+    <path d="M0,250 Q160,180 340,230 T680,215 T1010,225 T1200,210 L1200,360 L0,360 Z" fill="#cfe3a6"/>
+    <!-- 中景丘陵 -->
+    <path d="M0,290 Q220,225 430,272 T820,262 T1200,258 L1200,360 L0,360 Z" fill="#9fc96f"/>
+    <!-- 近景草地 -->
+    <path d="M0,322 Q300,288 600,312 T1200,300 L1200,360 L0,360 Z" fill="#74b052"/>
+    <!-- 蜿蜒山路 -->
+    <path d="M -20,360 C 220,300 250,300 430,322 S 760,330 1020,300 1230,300 1260,290"
+          fill="none" stroke="#efe7d2" stroke-width="30" stroke-linecap="round"/>
+    <path d="M -20,360 C 220,300 250,300 430,322 S 760,330 1020,300 1230,300 1260,290"
+          fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="10 14" opacity=".8"/>
+    <!-- 松樹 -->
+    <g>
+      <g transform="translate(120,250)"><rect x="-3" y="22" width="6" height="14" fill="#7a5230"/><path d="M0,-14 L16,22 L-16,22 Z" fill="#3f7a3a"/><path d="M0,-2 L13,18 L-13,18 Z" fill="#4f8c44"/></g>
+      <g transform="translate(72,272) scale(.8)"><rect x="-3" y="22" width="6" height="14" fill="#7a5230"/><path d="M0,-14 L16,22 L-16,22 Z" fill="#367033"/></g>
+      <g transform="translate(960,238) scale(.9)"><rect x="-3" y="22" width="6" height="14" fill="#7a5230"/><path d="M0,-16 L17,22 L-17,22 Z" fill="#3f7a3a"/></g>
+      <g transform="translate(1080,250)"><rect x="-3" y="22" width="6" height="14" fill="#7a5230"/><path d="M0,-16 L17,22 L-17,22 Z" fill="#4f8c44"/></g>
+      <g transform="translate(720,238) scale(.85)"><rect x="-3" y="22" width="6" height="14" fill="#7a5230"/><path d="M0,-16 L17,22 L-17,22 Z" fill="#3f7a3a"/></g>
+    </g>
+    <!-- 小屋 -->
+    <g transform="translate(840,250)"><rect x="0" y="6" width="26" height="18" rx="2" fill="#fbe9c8"/><path d="M-3,8 L13,-4 L29,8 Z" fill="#d98b4a"/><rect x="9" y="12" width="8" height="12" fill="#b9743a"/></g>
+    <!-- 校車（側面） -->
+    <g transform="translate(372,278)">
+      <ellipse cx="60" cy="58" rx="62" ry="7" fill="#3f6b34" opacity=".18"/>
+      <rect x="2" y="6" width="128" height="42" rx="11" fill="#f4b223"/>
+      <rect x="2" y="6" width="128" height="11" rx="6" fill="#e7a014"/>
+      <rect x="116" y="20" width="16" height="22" rx="4" fill="#ffd76b"/>
+      <g fill="#cdeaf6">
+        <rect x="16" y="20" width="18" height="14" rx="2"/><rect x="40" y="20" width="18" height="14" rx="2"/>
+        <rect x="64" y="20" width="18" height="14" rx="2"/><rect x="88" y="20" width="18" height="14" rx="2"/>
+      </g>
+      <rect x="2" y="44" width="128" height="5" fill="#d68f12"/>
+      <circle cx="34" cy="50" r="11" fill="#333"/><circle cx="34" cy="50" r="5" fill="#9aa0a6"/>
+      <circle cx="100" cy="50" r="11" fill="#333"/><circle cx="100" cy="50" r="5" fill="#9aa0a6"/>
+      <rect x="128" y="34" width="5" height="6" fill="#ffeec2"/>
+    </g>
+  </svg>
+
+  <div class="hero-inner">
+    <div class="brand"><span class="bus">🚌</span> Route to School <small>通學有路</small></div>
+    <div class="hero-card">
+      <h1>跨縣市通學需求媒合平台</h1>
+      <p class="tagline">交通平權・教育平權｜把散落各村里的「跨縣市通學需求」聚合成「可調派的真實校車路線」</p>
+      <p class="sub">涵蓋全台非六都 <b id="county-list">16</b> 縣市　｜　依居住村里聚合、規劃集合上車點與真實道路路線</p>
+      <span class="privacy">🔒 去識別化：僅蒐集「居住村里」與「就讀學校」，不蒐集姓名等個人資料</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="stats" id="stats"></section>
+
+  <div class="layout">
+    <div class="box">
+      <h2>
+        <span>跨縣市需求與真實路線地圖</span>
+        <span>選學校看路線：<select id="route-sel"></select></span>
+      </h2>
+      <div id="map"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--origin)"></span>居住／上車聚落</span>
+        <span>⭐ 學校（下車點）</span>
+        <span><span class="dot" style="background:var(--big)"></span>大型校車</span>
+        <span><span class="dot" style="background:var(--mid)"></span>中型巴士</span>
+        <span><span class="dot" style="background:var(--small)"></span>幸福巴士共乘</span>
+        <span>━ 真實道路路線（OSRM）</span>
+        <span>🔍 順路加載・請真人審核</span>
+      </div>
+    </div>
+
+    <div class="box" id="form-box">
+      <h2>➕ 登記我的跨縣市通學需求</h2>
+      <div class="form-body">
+        <p class="hint" id="f-hint">選擇「居住縣市 → 鄉鎮市區 → 里」與「就讀學校」，系統會自動定位你家、聚合需求並規劃路線。可在地圖上微調精準家點。</p>
+
+        <label>居住（上車）縣市</label>
+        <select id="f-county"></select>
+        <div class="row2">
+          <div><label>鄉鎮市區</label><select id="f-town" disabled></select></div>
+          <div><label>里 / 村</label><select id="f-village" disabled></select></div>
+        </div>
+        <button type="button" class="btn pick" id="f-pick">📍 在地圖上微調我家精準位置（選用）</button>
+
+        <div id="school-pick">
+          <label>學校縣市 <span style="font-weight:400;color:var(--muted)">（依 115 學年度就學區自動限定）</span></label>
+          <select id="f-scounty" disabled></select>
+          <label>就讀學校（高中）</label>
+          <select id="f-school" disabled></select>
+        </div>
+
+        <label>希望到校時段</label>
+        <select id="f-arrive">
+          <option value="07:00">07:00（跨縣市需早發車）</option>
+          <option value="07:20" selected>07:20</option>
+          <option value="07:40">07:40</option>
+        </select>
+
+        <button type="button" class="btn primary" id="f-submit">送出需求</button>
+        <button type="button" class="btn ghost" id="f-reset">↺ 重置為示範資料</button>
+        <div class="okmsg info" id="f-ok"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box section-gap">
+    <h2>跨縣市通學需求統計（居住鄉鎮 × 就讀學校縣市）</h2>
+    <div class="table-wrap"><table id="matrix"></table></div>
+  </div>
+
+  <div class="box section-gap">
+    <h2>建議調派路線（供司機參考：集合上車點 → 真實道路 → 下車點）</h2>
+    <div class="routes" id="routes"></div>
+  </div>
+
+  <footer>
+    <div class="footer-card">
+      <div>
+        <div class="footer-brand">🚌 Route to School ｜ 通學有路</div>
+        <p>把散落各村里的跨縣市通學需求，聚合成可調派的真實校車路線，<br>讓非六都偏鄉的每一位學子，都有一條安全、平等的求學第一哩路。</p>
+      </div>
+      <div>
+        <h4>資料來源</h4>
+        <ul>
+          <li>教育部・全國高級中等學校名錄</li>
+          <li>內政部・村里行政區開放資料</li>
+          <li>OpenStreetMap（地圖／地理編碼）</li>
+          <li>OSRM（真實道路路線規劃）</li>
+        </ul>
+      </div>
+      <div>
+        <h4>關於本站</h4>
+        <p>提案《改善偏鄉校車問題》之概念展示原型。需求人數為模擬之去識別化資料，僅供概念示範。</p>
+        <p>地圖 © OpenStreetMap 貢獻者</p>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<script>
+/* =========================================================
+   工具：地理編碼（Nominatim）＋ 道路路由（OSRM）＋ 快取
+   ========================================================= */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const hm2min=s=>{ const [h,m]=s.split(':').map(Number); return h*60+m; };
+const min2hm=v=>{ v=Math.round(v); v=((v%1440)+1440)%1440; return String(Math.floor(v/60)).padStart(2,'0')+':'+String(v%60).padStart(2,'0'); };
+async function fetchT(url, opts={}, ms=9000){
+  const ctl=new AbortController(); const id=setTimeout(()=>ctl.abort(), ms);
+  try{ return await fetch(url,{...opts, signal:ctl.signal}); } finally{ clearTimeout(id); }
+}
+function gcCache(){ try{return JSON.parse(localStorage.getItem('geocache_v3')||'{}');}catch(e){return {};} }
+function gcSave(c){ try{localStorage.setItem('geocache_v3', JSON.stringify(c));}catch(e){} }
+
+async function geocode(query){
+  const cache=gcCache();
+  if(cache[query]) return cache[query];
+  try{
+    const url=`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=tw&q=${encodeURIComponent(query)}`;
+    const r=await fetchT(url,{headers:{'Accept':'application/json'}});
+    const j=await r.json();
+    if(j&&j[0]){ const c={lat:+(+j[0].lat).toFixed(5), lng:+(+j[0].lon).toFixed(5)}; cache[query]=c; gcSave(cache); return c; }
+  }catch(e){}
+  return null;
+}
+async function geocodeVillage(county,town,village){
+  // 先試完整村里，失敗退回鄉鎮中心
+  return (await geocode(`${county}${town}${village}`)) || (await geocode(`${county}${town}`));
+}
+async function osrmRoute(coords){
+  if(coords.length<2) return null;
+  try{
+    const path=coords.map(c=>`${c.lng},${c.lat}`).join(';');
+    const url=`https://router.project-osrm.org/route/v1/driving/${path}?overview=full&geometries=geojson`;
+    const r=await fetchT(url); const j=await r.json();
+    if(j.code==='Ok'&&j.routes&&j.routes[0]) return j.routes[0];
+  }catch(e){}
+  return null;
+}
+function haversine(a,b){ const R=6371,t=x=>x*Math.PI/180;
+  const dLat=t(b.lat-a.lat),dLng=t(b.lng-a.lng);
+  const s=Math.sin(dLat/2)**2+Math.cos(t(a.lat))*Math.cos(t(b.lat))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(s)); }
+
+/* =========================================================
+   資料載入
+   ========================================================= */
+let VILLAGES={}, SCHOOLS=[], SCHOOL_COUNTIES=[], demands=[];
+const STORE_KEY='cross_county_demands_v4';
+const ARRIVE=['07:00','07:20','07:20','07:40','07:20'];
+const TIER_COLOR={big:'#2f855a', mid:'#dd6b20', small:'#e0a93b', wait:'#b6a692'};
+
+async function loadData(){
+  const [v,s]=await Promise.all([
+    fetch('./data/villages.json').then(r=>r.json()),
+    fetch('./data/highschools.json').then(r=>r.json()),
+  ]);
+  VILLAGES=v; SCHOOLS=s;
+  SCHOOL_COUNTIES=[...new Set(SCHOOLS.map(x=>x.county))];
+}
+
+/* 種子示範資料：若有預先做好的 data/seed.json 直接用（座標已內含、瞬間載入）；
+   否則依真實行政區即時地理編碼產生（首次較慢，之後快取）。 */
+async function loadOrBuildSeed(){
+  try{
+    const s=await fetch('./data/seed.json').then(r=>r.ok?r.json():null);
+    if(s&&Array.isArray(s)&&s.length) return s;
+  }catch(e){}
+  return await buildSeedLive();
+}
+async function buildSeedLive(){
+  setOverlay('產生示範資料中…', '正在向 OpenStreetMap 定位示範學生的居住村里');
+  const corridors=[
+    {res:'雲林縣', dest:'嘉義市', towns:3, perTown:2},
+    {res:'嘉義縣', dest:'嘉義市', towns:3, perTown:2},
+    {res:'南投縣', dest:'嘉義市', towns:2, perTown:2},
+  ];
+  const seed=[]; let id=1;
+  for(const c of corridors){
+    const towns=Object.keys(VILLAGES[c.res]||{}).slice(0,c.towns);
+    const schools=SCHOOLS.filter(s=>s.county===c.dest).slice(0,3);
+    if(!schools.length) continue;
+    let si=0;
+    for(const town of towns){
+      const villages=VILLAGES[c.res][town]||[];
+      for(let k=0;k<c.perTown && villages.length;k++){
+        const village=villages[k%villages.length];
+        const home=await geocodeVillage(c.res,town,village);
+        await sleep(1100);
+        if(!home) continue;
+        const sc=schools[si%schools.length]; si++;
+        seed.push({id:id++, resCounty:c.res, resTown:town, resVillage:village,
+          lat:home.lat, lng:home.lng, school:sc.name, schoolCounty:sc.county,
+          schoolLat:sc.lat, schoolLng:sc.lng, arrive:ARRIVE[id%ARRIVE.length]});
+      }
+    }
+  }
+  return seed;
+}
+
+/* =========================================================
+   聚合：destination 群（學校 5km 內）＝路線；上車點 = 居住點 2km 聚合
+   ========================================================= */
+function clusterPoints(items, key, thKm){
+  const clusters=[];
+  items.forEach(p=>{ const pt=key(p); let t=null;
+    for(const c of clusters){ if(haversine(c.anchor,pt)<=thKm){t=c;break;} }
+    if(!t){t={anchor:pt, members:[]}; clusters.push(t);}
+    t.members.push(p);
+  });
+  return clusters;
+}
+function centroid(items, key){ const n=items.length;
+  return {lat:items.reduce((s,m)=>s+key(m).lat,0)/n, lng:items.reduce((s,m)=>s+key(m).lng,0)/n}; }
+
+const MIN_VIABLE=4, ORIGIN_KM=13, PICK_KM=2.5, COMBINE_KM=20;
+
+// 由一組學生組成一條路線物件（combined=true 表示沿途多站下車的合併共乘線）
+function buildRoute(members, combined){
+  const n=members.length;
+  const oC=centroid(members, m=>({lat:m.lat,lng:m.lng}));
+  const destC=centroid(members, m=>({lat:m.schoolLat,lng:m.schoolLng}));
+  // 下車學校；合併線依「離居住地近→遠」排序（先經過的先下車），單一目的地則依人數
+  const dropMap={};
+  members.forEach(m=>{ (dropMap[m.school]=dropMap[m.school]||{name:m.school, county:m.schoolCounty, lat:m.schoolLat, lng:m.schoolLng, count:0}).count++; });
+  let dropoffs=Object.values(dropMap);
+  if(combined) dropoffs.sort((a,b)=> haversine(oC,a)-haversine(oC,b));
+  else dropoffs.sort((a,b)=> b.count-a.count);
+  const firstDrop=dropoffs[0];
+  // 上車聚落：居住點 2.5km 聚合，依「離第一個下車點遠→近」排序（沿途收人）
+  const pickClusters=clusterPoints(members, m=>({lat:m.lat,lng:m.lng}), PICK_KM);
+  const pickups=pickClusters.map(pc=>{
+    const c=centroid(pc.members, m=>({lat:m.lat,lng:m.lng}));
+    const nameCount={};
+    pc.members.forEach(m=>{ const nm=`${m.resTown}${m.resVillage}`; nameCount[nm]=(nameCount[nm]||0)+1; });
+    const label=Object.entries(nameCount).sort((a,b)=>b[1]-a[1])[0][0];
+    const county=pc.members[0].resCounty;
+    const maxFar=Math.max(...pc.members.map(m=>haversine({lat:m.lat,lng:m.lng}, c)));
+    return {label, county, lat:c.lat, lng:c.lng, count:pc.members.length, maxFar};
+  }).sort((a,b)=> haversine({lat:b.lat,lng:b.lng},firstDrop) - haversine({lat:a.lat,lng:a.lng},firstDrop));
+  const townsU=[...new Set(members.map(m=>m.resTown))];
+  const originCounties=[...new Set(members.map(m=>m.resCounty))];
+  const destCounties=[...new Set(dropoffs.map(d=>d.county))];
+  const targetArriveMin=Math.min(...members.map(m=>hm2min(m.arrive)));
+  let tier,advice,vehicle;
+  if(n>=20){ tier='big'; vehicle='大型校車（約45人座）'; advice='建議開設跨縣市大型校車專線'; }
+  else if(n>=8){ tier='mid'; vehicle='中型巴士（約25人座）'; advice='建議開設跨縣市中型巴士專線'; }
+  else if(n>=4){ tier='small'; vehicle='9人座幸福巴士共乘'; advice=combined?'偏鄉低密度需求合併共乘，沿途分段下車':'建議媒合幸福巴士跨縣市共乘'; }
+  else { tier='wait'; vehicle='—'; advice='需求待累積中（暫無法合併）'; }
+  const title = combined
+    ? `${townsU.slice(0,2).join('、')}${townsU.length>2?'等':''} → ${destCounties.join('→')}（沿途下車）`
+    : `${townsU.slice(0,3).join('、')}${townsU.length>3?'等':''} → ${destCounties[0]}`;
+  return {id:`r${Math.round(oC.lat*100)}_${Math.round(oC.lng*100)}_${Math.round(destC.lat*100)}_${combined?'c':'s'}`,
+    combined:!!combined, destCounty:destCounties[0], destCounties, destC, oC, n,
+    pickups, dropoffs, tier, advice, vehicle, originCounties, targetArriveMin, title,
+    members, reviewPickups:[]};
+}
+
+function computeRoutes(items){
+  // 第一階段：以目的地（學校 5km）→ 居住走廊（13km）切出單一目的地路線
+  const destClusters=clusterPoints(items, d=>({lat:d.schoolLat,lng:d.schoolLng}), 5);
+  const routes=[]; const leftover=[];
+  destClusters.forEach(dc=>{
+    clusterPoints(dc.members, m=>({lat:m.lat,lng:m.lng}), ORIGIN_KM).forEach(oc=>{
+      if(oc.members.length>=MIN_VIABLE) routes.push(buildRoute(oc.members, false));
+      else leftover.push(...oc.members);   // 無法獨立成線者，留待合併
+    });
+  });
+  // 第二階段：把無法成線者依「居住地相近」合併；達門檻者成為沿途分段下車的合併共乘線
+  clusterPoints(leftover, m=>({lat:m.lat,lng:m.lng}), COMBINE_KM).forEach(oc=>{
+    const multiDest=new Set(oc.members.map(m=>m.schoolCounty)).size>1;  // 跨不同縣市才算合併共乘
+    routes.push(buildRoute(oc.members, oc.members.length>=MIN_VIABLE && multiDest));
+  });
+  return routes.sort((a,b)=>b.n-a.n);
+}
+
+// 點到路線（OSRM 折線頂點）的最短距離（取樣加速）
+function minDistToPath(pt, pathLL){
+  let best=Infinity; const step=Math.max(1, Math.floor(pathLL.length/160));
+  for(let i=0;i<pathLL.length;i+=step){ const d=haversine(pt, pathLL[i]); if(d<best) best=d; }
+  return best;
+}
+const DETOUR_KM=8;   // 路線經過家門口 8km 內 → 可評估順路中途接送（繞路較多，標記請真人審核）
+
+// 把仍無法成線的零星學生，嘗試「順路」掛到會經過他家與學校的既有路線上（標記請真人審核）
+function attachReviewPickups(routes){
+  const hosts=routes.filter(r=>r.tier!=='wait' && r.osrm && r.osrm.geometry);
+  if(!hosts.length) return routes;
+  const hostPaths=hosts.map(r=>r.osrm.geometry.coordinates.map(c=>({lat:c[1],lng:c[0]})));
+  hosts.forEach(h=>h.reviewPickups=[]);
+  const survivors=[];
+  routes.filter(r=>r.tier==='wait').forEach(wr=>{
+    (wr.members||[]).forEach(m=>{
+      let best=null, bs=Infinity;
+      hosts.forEach((h,i)=>{
+        const dHome=minDistToPath({lat:m.lat,lng:m.lng}, hostPaths[i]);
+        const dSchool=minDistToPath({lat:m.schoolLat,lng:m.schoolLng}, hostPaths[i]);
+        if(dHome<=DETOUR_KM && dSchool<=DETOUR_KM && (dHome+dSchool)<bs){ bs=dHome+dSchool; best=h; best._dHome=dHome; }
+      });
+      if(best){ best.reviewPickups.push({...m, detourKm:+minDistToPath({lat:m.lat,lng:m.lng}, hostPaths[hosts.indexOf(best)]).toFixed(1)}); best.review=true; }
+      else survivors.push(m);
+    });
+  });
+  // 仍沒被接走的，重建為「待累積」路線
+  const rebuilt=[];
+  clusterPoints(survivors, m=>({lat:m.lat,lng:m.lng}), COMBINE_KM).forEach(oc=> rebuilt.push(buildRoute(oc.members, false)));
+  return [...routes.filter(r=>r.tier!=='wait'), ...rebuilt].sort((a,b)=>b.n-a.n);
+}
+
+// 交叉統計：居住鄉鎮(含縣市) × 學校縣市
+function computeMatrix(items){
+  const rows={}, cols=[...new Set(items.map(d=>d.schoolCounty))];
+  items.forEach(d=>{ const rk=`${d.resCounty} ${d.resTown}`;
+    (rows[rk]=rows[rk]||{})[d.schoolCounty]=((rows[rk]||{})[d.schoolCounty]||0)+1; });
+  return {rows, cols};
+}
+
+/* =========================================================
+   地圖
+   ========================================================= */
+let map, baseLayer, routeLayer;
+function initMap(){
+  map=L.map('map',{scrollWheelZoom:true}).setView([23.7,120.6],8);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18, attribution:'© OpenStreetMap'}).addTo(map);
+  baseLayer=L.layerGroup().addTo(map);
+  routeLayer=L.layerGroup().addTo(map);
+}
+function renderBase(routes, activeSchool){
+  baseLayer.clearLayers();
+  // 學校（選了某校時，其他校變灰）
+  const usedSchools={};
+  demands.forEach(d=>{ if(!usedSchools[d.school]){ usedSchools[d.school]=1;
+    const dim=activeSchool && d.school!==activeSchool;
+    L.marker([d.schoolLat,d.schoolLng],{icon:L.divIcon({className:'',
+      html:`<div class="school-pin" style="${dim?'opacity:.3;filter:grayscale(1)':''}">⭐</div>`,iconSize:[24,24],iconAnchor:[12,12]})})
+      .addTo(baseLayer).bindPopup(`<b>⭐ ${d.school}</b><br>${d.schoolCounty}`);
+  }});
+  // 上車聚落：與所選學校相關者保持紫色，無關者變灰（且不蓋過相關點）
+  const activeKeys=new Set();
+  if(activeSchool){
+    routes.forEach(r=>{ if(r.dropoffs.some(d=>d.name===activeSchool))
+      r.pickups.forEach(p=>activeKeys.add(p.lat.toFixed(4)+','+p.lng.toFixed(4))); });
+  }
+  const drawn=new Set();
+  routes.forEach(r=>{
+    const serves = !activeSchool || r.dropoffs.some(d=>d.name===activeSchool);
+    r.pickups.forEach(p=>{
+      const key=p.lat.toFixed(4)+','+p.lng.toFixed(4);
+      if(!serves && activeKeys.has(key)) return;       // 已由相關路線畫紫色，略過
+      if(drawn.has(key+(serves?'a':'g'))) return; drawn.add(key+(serves?'a':'g'));
+      const color = serves ? 'var(--origin)' : '#cbd5e1';
+      const size=Math.max(26,Math.min(48,22+p.count*2.2));
+      L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',
+        html:`<div class="cluster-badge" style="width:${size}px;height:${size}px;background:${color};font-size:${size>40?15:13}px;${serves?'':'opacity:.85'}">${p.count}</div>`,
+        iconSize:[size,size],iconAnchor:[size/2,size/2]})})
+        .addTo(baseLayer).bindPopup(`<b>${p.county}${p.label}</b>（${p.count} 人）<br>🚏 集合上車點<br>家到集合點最遠約 ${p.maxFar.toFixed(1)} km`);
+    });
+  });
+}
+// 為每條路線計算真實道路（OSRM）：幾何、里程、時間、到校時刻表、是否需轉乘
+async function enrichRoutes(routes){
+  await Promise.all(routes.map(async r=>{
+    const way=[...r.pickups.map(p=>({lat:p.lat,lng:p.lng})), ...r.dropoffs.map(d=>({lat:d.lat,lng:d.lng}))];
+    const data=await osrmRoute(way);
+    r.osrm=data;
+    const span=new Set([...r.originCounties, ...(r.destCounties||[r.destCounty])]).size;
+    r.countySpan=span;
+    if(data){
+      r.distanceKm=data.distance/1000;
+      r.durationMin=data.duration/60;
+      const legs=(data.legs||[]).map(l=>l.duration);
+      const cum=[0]; legs.forEach(d=>cum.push(cum[cum.length-1]+d));
+      const firstDropIdx=r.pickups.length;             // 第一個下車點的航點索引
+      const departMin=r.targetArriveMin-(cum[firstDropIdx]||0)/60;
+      r.departTime=min2hm(departMin);
+      r.schoolArrive=min2hm(r.targetArriveMin);
+      r.timetable=r.pickups.map((p,i)=>({label:`${p.county}${p.label}`, time:min2hm(departMin+(cum[i]||0)/60)}));
+      // 各下車點的抵達時刻（合併線會有多個、依序遞增）
+      r.dropTimes=r.dropoffs.map((d,j)=>({name:d.name, county:d.county, count:d.count, time:min2hm(departMin+(cum[firstDropIdx+j]||0)/60)}));
+      // 轉乘：跨 ≥3 縣市，或全程 >50km
+      r.needsTransfer=(r.distanceKm>50)||span>=3;
+      if(r.needsTransfer && data.geometry && data.geometry.coordinates && data.geometry.coordinates.length){
+        const cs=data.geometry.coordinates; const mid=cs[Math.floor(cs.length/2)];
+        r.transfer={lat:mid[1], lng:mid[0]};
+      }
+    }else{
+      r.needsTransfer=span>=3;
+    }
+  }));
+}
+
+// /delight：校車沿著路線緩緩開向學校的微互動
+let busGen=0;
+function stopBuses(){ busGen++; }
+function animateBus(latlngs){
+  if(!latlngs || latlngs.length<2) return;
+  const cum=[0];
+  for(let i=1;i<latlngs.length;i++) cum.push(cum[i-1]+haversine({lat:latlngs[i-1][0],lng:latlngs[i-1][1]},{lat:latlngs[i][0],lng:latlngs[i][1]}));
+  const total=cum[cum.length-1]; if(!total) return;
+  const durMs=Math.min(26000, Math.max(9000, total*320));   // 路越長開越久（有上限），緩緩前行
+  const marker=L.marker(latlngs[0],{icon:L.divIcon({className:'',html:'<div class="bus-anim">🚌</div>',iconSize:[24,24],iconAnchor:[12,12]}),interactive:false,zIndexOffset:2000}).addTo(routeLayer);
+  const myGen=busGen; let start=null;
+  function frame(ts){
+    if(myGen!==busGen) return;                 // 重畫時讓舊動畫自然停止
+    if(start===null) start=ts;
+    const t=((ts-start)%durMs)/durMs, target=t*total;
+    let i=1; while(i<cum.length && cum[i]<target) i++;
+    const a=latlngs[i-1], b=latlngs[i]||a, seg=(cum[i]||cum[i-1])-cum[i-1], f=seg?(target-cum[i-1])/seg:0;
+    marker.setLatLng([a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f]);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// 在地圖上畫出指定路線（使用已算好的 OSRM 幾何）
+function drawRoutes(routes, fit){
+  stopBuses();
+  routeLayer.clearLayers();
+  const bounds=[];
+  routes.forEach(r=>{
+    const color=TIER_COLOR[r.tier];
+    let pathLL=null;
+    if(r.osrm&&r.osrm.geometry){
+      L.geoJSON(r.osrm.geometry,{style:{color, weight:5, opacity:.85}}).addTo(routeLayer);
+      pathLL=r.osrm.geometry.coordinates.map(c=>[c[1],c[0]]);
+      pathLL.forEach(c=>bounds.push(c));
+    }else{
+      pathLL=[...r.pickups.map(p=>[p.lat,p.lng]), ...r.dropoffs.map(d=>[d.lat,d.lng])];
+      L.polyline(pathLL,{color, weight:4, opacity:.7, dashArray:'4 6'}).addTo(routeLayer);
+      pathLL.forEach(c=>bounds.push(c));
+    }
+    animateBus(pathLL);
+    r.pickups.forEach((p,i)=>{
+      L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',
+        html:`<div class="cluster-badge" style="width:24px;height:24px;background:${color};font-size:12px">${i+1}</div>`,
+        iconSize:[24,24],iconAnchor:[12,12]})})
+        .addTo(routeLayer).bindPopup(`上車 ${i+1}：<b>${p.county}${p.label}</b>　${p.count} 人${r.timetable?`<br>🕐 ${r.timetable[i].time} 發車`:''}`);
+    });
+    // 下車點（合併線會有多個，依序顯示抵達時刻）
+    r.dropoffs.forEach((d,j)=>{
+      L.marker([d.lat,d.lng],{icon:L.divIcon({className:'',
+        html:`<div class="cluster-badge" style="width:22px;height:22px;background:${color};font-size:11px;border-radius:7px">下</div>`,iconSize:[22,22],iconAnchor:[11,11]})})
+        .addTo(routeLayer).bindPopup(`下車 ${j+1}：<b>${d.name}</b>（${d.county}）${d.count} 人${r.dropTimes?`<br>🕐 ${r.dropTimes[j].time} 抵達`:''}`);
+    });
+    if(r.transfer){
+      L.marker([r.transfer.lat,r.transfer.lng],{icon:L.divIcon({className:'',
+        html:`<div style="font-size:22px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))">🔄</div>`,iconSize:[26,26],iconAnchor:[13,13]})})
+        .addTo(routeLayer).bindPopup(`<b>🔄 建議轉乘點（中繼）</b><br>${r.title}<br>跨 ${r.countySpan} 縣市，建議於此分段轉乘`);
+      bounds.push([r.transfer.lat,r.transfer.lng]);
+    }
+    // 順路加載（請真人審核）的學生家
+    (r.reviewPickups||[]).forEach(p=>{
+      L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',
+        html:`<div class="review-pin">🔍</div>`,iconSize:[24,24],iconAnchor:[12,12]})})
+        .addTo(routeLayer).bindPopup(`<b>🔍 順路加載・請真人審核</b><br>${p.resCounty}${p.resTown}${p.resVillage} → ${p.school}<br>距本線路徑約 ${p.detourKm} km，可評估中途接送`);
+      bounds.push([p.lat,p.lng]);
+    });
+  });
+  if(fit&&bounds.length) map.fitBounds(bounds,{padding:[40,40]});
+}
+
+// 路線選單：依「有需求的學校」選 → 高亮服務該校的路線
+function onRouteSel(val){
+  renderBase(currentRoutes, val||null);   // 重新著色：無關上車點變灰
+  if(!val){ drawRoutes(currentRoutes, false); return; }
+  const rs=currentRoutes.filter(r=>r.dropoffs.some(d=>d.name===val));
+  drawRoutes(rs, true);
+}
+
+/* =========================================================
+   畫面渲染
+   ========================================================= */
+function renderStats(routes){
+  const inScope=routes.flatMap(r=>r.members||[]);
+  const total=inScope.length;
+  const actionable=routes.filter(r=>r.tier!=='wait');
+  const served=actionable.reduce((s,r)=>s+r.n,0);
+  const townCount=new Set(inScope.map(d=>`${d.resCounty}${d.resTown}`)).size;
+  const totalKm=actionable.reduce((s,r)=>s+(r.distanceKm||0),0);
+  const reviewCount=routes.reduce((s,r)=>s+((r.reviewPickups&&r.reviewPickups.length)||0),0);
+  const cards=[
+    {num:total, lbl:'跨縣市通學需求（人）'},
+    {num:actionable.length, lbl:'可調派跨縣市路線', accent:true},
+    {num:served, lbl:'可服務學生數（人）', accent:true},
+    {num:totalKm?Math.round(totalKm):'—', lbl:'校車路線總里程（km）', km:true},
+    {num:reviewCount, lbl:'順路待真人審核（人）', review:true},
+    {num:townCount, lbl:'涵蓋居住鄉鎮'},
+  ];
+  document.getElementById('stats').innerHTML=cards.map(c=>
+    `<div class="card ${c.accent?'accent':''}${c.km?' km':''}${c.review?' rv':''}"><div class="num">${c.num}</div><div class="lbl">${c.lbl}</div></div>`).join('');
+}
+function renderMatrix(routes){
+  const inScope=(routes||currentRoutes).flatMap(r=>r.members||[]);
+  const {rows,cols}=computeMatrix(inScope);
+  const rowKeys=Object.keys(rows).sort();
+  let head=`<thead><tr><th class="town" style="text-align:left">居住鄉鎮 ＼ 就讀縣市</th>`+
+    cols.map(c=>`<th>${c}</th>`).join('')+`<th class="tot">小計</th></tr></thead>`;
+  const colTot={}; let grand=0; let body='<tbody>';
+  rowKeys.forEach(rk=>{
+    let rt=0; body+=`<tr><td class="town">${rk}</td>`;
+    cols.forEach(c=>{ const v=rows[rk][c]||0; rt+=v; colTot[c]=(colTot[c]||0)+v;
+      body+=`<td class="${v?'':'zero'}">${v||'·'}</td>`; });
+    grand+=rt; body+=`<td class="tot">${rt}</td></tr>`;
+  });
+  body+=`<tr class="tot"><td class="town" style="text-align:left">小計</td>`+
+    cols.map(c=>`<td>${colTot[c]||0}</td>`).join('')+`<td>${grand}</td></tr></tbody>`;
+  document.getElementById('matrix').innerHTML=head+body;
+}
+function renderRoutes(routes){
+  document.getElementById('routes').innerHTML=routes.map(r=>{
+    const meta = (r.distanceKm!=null)
+      ? `🛣️ 全程約 ${r.distanceKm.toFixed(1)} km・約 ${Math.round(r.durationMin)} 分鐘（依真實道路）`
+      : '（道路里程暫不可用，下方為直線估計）';
+    const combinedNote = r.combined
+      ? `<div class="combined">🔁 <b>合併共乘線</b>：整合鄰近偏鄉、前往不同縣市的零星需求一同出發，<b>先經過的縣市先下車</b>，再續往下一站。</div>`
+      : '';
+    const transfer = r.needsTransfer
+      ? `<div class="transfer">🔄 <b>建議分段轉乘</b>：本線跨越 ${r.countySpan} 個縣市${r.distanceKm!=null?`、全程約 ${r.distanceKm.toFixed(0)} km`:''}，建議學生先由社區接駁至中繼轉乘點，再搭幹線車前往學校（地圖上 🔄 為建議轉乘位置）。</div>`
+      : '';
+    const review = (r.reviewPickups&&r.reviewPickups.length)
+      ? `<div class="review">🔍 <b>順路加載・請真人審核</b>：本線路徑會經過下列原本無法成線學生的住家附近，可評估中途接送（需專人確認繞路距離與安全）：
+           <ul>${r.reviewPickups.map(p=>`<li>${p.resCounty}${p.resTown}${p.resVillage} → ${p.school}　<span class="stop-area">距路線約 ${p.detourKm} km</span></li>`).join('')}</ul></div>`
+      : '';
+    const dropList = r.dropoffs.map((d,j)=>
+      `<li>${r.combined?`<b>第${j+1}站</b> `:''}${d.name}（${d.county}）<b>${d.count}</b> 人${r.dropTimes?` <span class="stop-area">🕐 ${r.dropTimes[j].time} 抵達</span>`:''}</li>`).join('');
+    const schedule = r.timetable
+      ? `<div class="route-col"><h4>🕐 預計時刻表</h4><ol>
+           ${r.timetable.map(t=>`<li>${t.time}　${t.label} <span class="stop-area">上車</span></li>`).join('')}
+           ${(r.dropTimes||[]).map((d,j)=>`<li><b>${d.time}　抵達 ${d.name}（下車${r.combined?`・第${j+1}站`:''}）</b></li>`).join('')}
+         </ol></div>`
+      : `<div class="route-col"><h4>🕐 預計時刻表</h4><p class="stop-area">道路時間暫不可用</p></div>`;
+    return `<div class="route-card ${r.tier}${r.combined?' combined-card':''}">
+      <div class="route-head">
+        <span class="route-title">${r.title} 線</span>
+        <span class="badge ${r.tier}">${r.vehicle}</span>
+        ${r.reviewPickups&&r.reviewPickups.length?`<span class="badge review-badge">🔍 ${r.reviewPickups.length} 待審核</span>`:''}
+      </div>
+      <div class="route-sub">共 ${r.n} 名學生${r.reviewPickups&&r.reviewPickups.length?`（＋${r.reviewPickups.length} 順路待審核）`:''} ｜ ${r.advice}</div>
+      <div class="route-meta">${meta}</div>
+      ${combinedNote}
+      ${transfer}
+      ${review}
+      <div class="route-cols">
+        <div class="route-col">
+          <h4>🚏 上車點（依路線由遠到近）</h4>
+          <ol>${r.pickups.map(p=>`<li>${p.county}${p.label} <b>${p.count}</b> 人${p.maxFar>1.5?` <span class="far">⚠️家距 ${p.maxFar.toFixed(1)}km</span>`:''}</li>`).join('')}</ol>
+        </div>
+        <div class="route-col">
+          <h4>🏫 下車點${r.combined?'（依序）':''}</h4>
+          <ol>${dropList}</ol>
+        </div>
+      </div>
+      <div class="route-cols">
+        ${schedule}
+        <div class="route-col"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* =========================================================
+   連動下拉
+   ========================================================= */
+function fillSelect(sel, items, placeholder){
+  sel.innerHTML=`<option value="">${placeholder}</option>`+items.map(i=>`<option value="${i}">${i}</option>`).join('');
+}
+/* 115 學年度就學區（含共同就學區）— 居住縣市可就讀之學校縣市（縣市層級） */
+const ZONE_COUNTIES={
+  '基隆市':['基隆市','臺北市','新北市','桃園市','宜蘭縣'],
+  '臺北市':['基隆市','臺北市','新北市','桃園市','宜蘭縣'],
+  '新北市':['基隆市','臺北市','新北市','桃園市','宜蘭縣'],
+  '桃園市':['桃園市','連江縣','基隆市','臺北市','新北市','新竹市','新竹縣','苗栗縣'],
+  '連江縣':['桃園市','連江縣','基隆市','臺北市','新北市','新竹市','新竹縣','苗栗縣'],
+  '新竹市':['新竹市','新竹縣','苗栗縣','桃園市','臺中市'],
+  '新竹縣':['新竹市','新竹縣','苗栗縣','桃園市','臺中市'],
+  '苗栗縣':['新竹市','新竹縣','苗栗縣','桃園市','臺中市'],
+  '臺中市':['臺中市','南投縣','宜蘭縣','苗栗縣','雲林縣','彰化縣'],
+  '南投縣':['臺中市','南投縣','宜蘭縣','苗栗縣','雲林縣','彰化縣'],
+  '彰化縣':['彰化縣','臺中市','南投縣','雲林縣'],
+  '雲林縣':['雲林縣','彰化縣','臺中市','南投縣','嘉義縣','嘉義市'],
+  '嘉義縣':['嘉義縣','嘉義市','雲林縣','臺南市'],
+  '嘉義市':['嘉義縣','嘉義市','雲林縣','臺南市'],
+  '臺南市':['臺南市','嘉義縣','嘉義市','高雄市'],
+  '高雄市':['高雄市','臺南市','屏東縣'],
+  '屏東縣':['屏東縣','高雄市'],
+  '宜蘭縣':['宜蘭縣','新北市','臺中市'],
+  '花蓮縣':['花蓮縣'], '臺東縣':['臺東縣'], '澎湖縣':['澎湖縣'], '金門縣':['金門縣'],
+};
+function allowedSchoolCounties(resCounty){
+  const allow=ZONE_COUNTIES[resCounty];
+  return allow ? SCHOOL_COUNTIES.filter(c=>allow.includes(c)) : SCHOOL_COUNTIES.slice();
+}
+// 反查：就讀某學校縣市的學生，可能來自哪些居住縣市（供已登入學生限定居住地）
+function residenceCountiesForSchoolCounty(schoolCounty){
+  return Object.keys(VILLAGES).filter(k=> (ZONE_COUNTIES[k]||[]).includes(schoolCounty));
+}
+
+function setupCascade(){
+  const cSel=document.getElementById('f-county'), tSel=document.getElementById('f-town'), vSel=document.getElementById('f-village');
+  const scSel=document.getElementById('f-scounty'), sSel=document.getElementById('f-school');
+  // 學生：居住縣市只列出「就學區能就讀本校縣市」的縣市；其他角色列全部
+  const resCounties=(SESSION&&SESSION.role==='student') ? residenceCountiesForSchoolCounty(SESSION.county) : Object.keys(VILLAGES);
+  fillSelect(cSel, resCounties, '請選擇縣市');
+  scSel.innerHTML=''; scSel.disabled=true;
+
+  cSel.onchange=()=>{ const c=cSel.value;
+    if(c){
+      fillSelect(tSel, Object.keys(VILLAGES[c]), '請選擇鄉鎮市區'); tSel.disabled=false;
+      // 依就學區限制可選的學校縣市
+      fillSelect(scSel, allowedSchoolCounties(c), '請選擇學校縣市'); scSel.disabled=false;
+    } else {
+      tSel.innerHTML=''; tSel.disabled=true; scSel.innerHTML=''; scSel.disabled=true;
+    }
+    vSel.innerHTML=''; vSel.disabled=true; sSel.innerHTML=''; sSel.disabled=true; pickedHome=null;
+  };
+  tSel.onchange=()=>{ const c=cSel.value, t=tSel.value;
+    if(t){ fillSelect(vSel, VILLAGES[c][t], '請選擇里／村'); vSel.disabled=false; }
+    else { vSel.innerHTML=''; vSel.disabled=true; }
+    pickedHome=null;
+  };
+  vSel.onchange=()=>{ pickedHome=null; document.getElementById('f-ok').textContent=''; };
+
+  scSel.onchange=()=>{ const c=scSel.value;
+    if(c){ const list=SCHOOLS.filter(s=>s.county===c);
+      sSel.innerHTML=`<option value="">請選擇學校</option>`+list.map(s=>`<option value="${s.name}">${s.short||s.name}</option>`).join('');
+      sSel.disabled=false; }
+    else { sSel.innerHTML=''; sSel.disabled=true; }
+  };
+}
+
+/* 地圖微調家點 */
+let pickMode=false, pickedHome=null, pickMarker=null;
+function setupPick(){
+  const btn=document.getElementById('f-pick');
+  btn.onclick=()=>{ pickMode=!pickMode; btn.classList.toggle('active',pickMode);
+    btn.textContent=pickMode?'✓ 請在地圖上點一下你家位置…（再按取消）':'📍 在地圖上微調我家精準位置（選用）';
+    if(!pickMode && pickMarker){ map.removeLayer(pickMarker); pickMarker=null; pickedHome=null; }
+  };
+  map.on('click',e=>{ if(!pickMode) return;
+    pickedHome={lat:+e.latlng.lat.toFixed(5), lng:+e.latlng.lng.toFixed(5)};
+    if(pickMarker) map.removeLayer(pickMarker);
+    pickMarker=L.marker([pickedHome.lat,pickedHome.lng]).addTo(map);
+    document.getElementById('f-ok').className='okmsg ok';
+    document.getElementById('f-ok').textContent=`已標定家點：${pickedHome.lat}, ${pickedHome.lng}`;
+  });
+}
+
+/* =========================================================
+   送出 / 重置 / 整體刷新
+   ========================================================= */
+let currentRoutes=[];
+// 依登入角色限定可見路線：學生＝自己學校；教師＝自己學校縣市；管理員＝全部
+function applyScope(routes){
+  if(!SESSION || SESSION.role==='admin') return routes;
+  if(SESSION.role==='teacher')
+    return routes.filter(r=> (r.destCounties||[r.destCounty]).includes(SESSION.county) || r.dropoffs.some(d=>d.county===SESSION.county));
+  return routes.filter(r=> r.dropoffs.some(d=>d.name===SESSION.school));   // student
+}
+
+async function refresh(){
+  const all=computeRoutes(demands);
+  document.getElementById('routes').innerHTML='<p style="padding:16px;color:#8a7765">路線規劃中（計算真實道路與抵達時間）…</p>';
+  await enrichRoutes(all);
+  const attached=attachReviewPickups(all);
+  currentRoutes=applyScope(attached);                  // ← 角色權限過濾
+  renderStats(currentRoutes);
+  renderBase(currentRoutes);
+  renderMatrix(currentRoutes);
+  renderRoutes(currentRoutes);
+  // 路線選單 = 可見路線中「有需求的學校」
+  const schoolCounts={}; currentRoutes.forEach(r=> r.dropoffs.forEach(d=> schoolCounts[d.name]=(schoolCounts[d.name]||0)+d.count));
+  const sel=document.getElementById('route-sel'); const cur=sel.value;
+  const opts=Object.entries(schoolCounts).sort((a,b)=>b[1]-a[1])
+    .map(([name,c])=>`<option value="${name}">${name}（${c}人）</option>`).join('');
+  sel.innerHTML=`<option value="">${SESSION&&SESSION.role==='student'?'我的學校路線':'全部可見路線'}</option>`+opts;
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+  onRouteSel(sel.value);
+}
+
+function setupForm(){
+  document.getElementById('route-sel').onchange=e=>onRouteSel(e.target.value);
+
+  document.getElementById('f-submit').onclick=async()=>{
+    const county=document.getElementById('f-county').value;
+    const town=document.getElementById('f-town').value;
+    const village=document.getElementById('f-village').value;
+    // 學生：學校固定為登入學校；其他角色：用下拉選的學校
+    const schoolName=(SESSION&&SESSION.role==='student') ? SESSION.school : document.getElementById('f-school').value;
+    const ok=document.getElementById('f-ok');
+    if(!county||!town||!village){ ok.className='okmsg warn'; ok.textContent='請完整選擇居住縣市 / 鄉鎮市區 / 里。'; return; }
+    if(!schoolName){ ok.className='okmsg warn'; ok.textContent='請選擇就讀學校。'; return; }
+    const sc=SCHOOLS.find(s=>s.name===schoolName);
+    const btn=document.getElementById('f-submit'); btn.disabled=true; btn.textContent='定位中…';
+    let home=pickedHome;
+    if(!home){ ok.className='okmsg info'; ok.textContent='正在定位你的居住村里…'; home=await geocodeVillage(county,town,village); }
+    btn.disabled=false; btn.textContent='送出需求';
+    if(!home){ ok.className='okmsg warn'; ok.textContent='找不到該村里座標，請改用「在地圖上微調」標定家點。'; return; }
+    const id=(demands.reduce((m,d)=>Math.max(m,d.id),0))+1;
+    demands.push({id, resCounty:county, resTown:town, resVillage:village, lat:home.lat, lng:home.lng,
+      school:sc.name, schoolCounty:sc.county, schoolLat:sc.lat, schoolLng:sc.lng,
+      arrive:document.getElementById('f-arrive').value});
+    saveDemands();
+    if(pickMarker){ map.removeLayer(pickMarker); pickMarker=null; } pickMode=false; pickedHome=null;
+    document.getElementById('f-pick').classList.remove('active');
+    document.getElementById('f-pick').textContent='📍 在地圖上微調我家精準位置（選用）';
+    ok.className='okmsg ok'; ok.textContent='✓ 已新增需求，統計表與路線已即時重新調派！';
+    refresh();
+  };
+
+  document.getElementById('f-reset').onclick=async()=>{
+    if(!confirm('確定要清除所有當場新增的資料，回到原始示範狀態嗎？')) return;
+    localStorage.removeItem(STORE_KEY);
+    setOverlayShow(true); setOverlay('重新載入示範資料中…','');
+    demands=await loadOrBuildSeed(); saveDemands(); setOverlayShow(false);
+    document.getElementById('f-ok').textContent=''; refresh();
+  };
+}
+
+function saveDemands(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(demands)); }catch(e){} }
+function loadDemandsLS(){ try{ const r=localStorage.getItem(STORE_KEY); if(r){const d=JSON.parse(r); if(Array.isArray(d)&&d.length) return d;} }catch(e){} return null; }
+
+/* 遮罩 */
+function setOverlay(msg, sub){ document.getElementById('overlay-msg').textContent=msg;
+  if(sub!==undefined){ const s=document.querySelector('#overlay small'); if(s&&sub) s.textContent=sub; } }
+function setOverlayShow(show){ document.getElementById('overlay').style.display=show?'flex':'none'; }
+
+/* =========================================================
+   啟動
+   ========================================================= */
+/* =========================================================
+   登入與角色權限
+   ========================================================= */
+const DEMO_ACCOUNTS=[
+  {role:'admin',   county:'高雄市', school:'市立高雄中學', account:'admin', password:'123456'},
+  {role:'student', county:'臺中市', school:'市立臺中一中', account:'S001', password:'950312'},
+  {role:'student', county:'嘉義市', school:'國立嘉義高中', account:'S002', password:'960815'},
+  {role:'student', county:'臺南市', school:'國立新營高中', account:'S003', password:'951030'},
+  {role:'teacher', county:'嘉義市', school:'國立嘉義高中', account:'T001', password:'800101'},
+  {role:'teacher', county:'臺中市', school:'市立臺中一中', account:'T002', password:'790203'},
+];
+let SESSION=null;
+const ROLE_TXT={student:'學生', teacher:'教師', admin:'管理員'};
+function schoolShort(name){ const s=SCHOOLS.find(x=>x.name===name); return s?(s.short||s.name):name; }
+
+function buildLogin(){
+  const cc=document.getElementById('lg-county'), cs=document.getElementById('lg-school');
+  fillSelect(cc, SCHOOL_COUNTIES, '請選擇學校縣市');
+  cc.onchange=()=>{ const c=cc.value;
+    if(c){ const list=SCHOOLS.filter(s=>s.county===c);
+      cs.innerHTML=`<option value="">請選擇學校</option>`+list.map(s=>`<option value="${s.name}">${s.short||s.name}</option>`).join(''); cs.disabled=false; }
+    else { cs.innerHTML=''; cs.disabled=true; } };
+  document.getElementById('lg-go').onclick=doLogin;
+  document.getElementById('lg-pw').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+}
+function doLogin(){
+  const county=document.getElementById('lg-county').value, school=document.getElementById('lg-school').value;
+  const acct=document.getElementById('lg-acct').value.trim(), pw=document.getElementById('lg-pw').value.trim();
+  const err=document.getElementById('lg-err');
+  if(!county||!school||!acct||!pw){ err.textContent='請完整填寫所有欄位。'; return; }
+  const m=DEMO_ACCOUNTS.find(a=>a.county===county&&a.school===school&&a.account===acct&&a.password===pw);
+  if(!m){ err.textContent='帳號、密碼或學校不正確（展示版僅提供測試帳號，請見下方）。'; return; }
+  SESSION={role:m.role, county:m.county, school:m.school};
+  document.getElementById('login').style.display='none';
+  enterApp();
+}
+function renderSessionBar(){
+  const sb=document.getElementById('sessionbar');
+  const scope = SESSION.role==='admin' ? '可檢視：全臺所有縣市路線'
+    : SESSION.role==='teacher' ? `可檢視：${SESSION.county} 全縣市到校路線`
+    : `可檢視：${schoolShort(SESSION.school)} 的路線`;
+  sb.innerHTML=`<span class="role">${ROLE_TXT[SESSION.role]}</span>`
+    +`<span class="who">${SESSION.county} ｜ ${schoolShort(SESSION.school)}</span>`
+    +`<span class="scope">🔒 ${scope}</span>`
+    +`<button class="logout" onclick="location.reload()">登出</button>`;
+  sb.style.display='flex';
+}
+function applyRoleUI(){
+  if(SESSION.role==='student'){
+    document.getElementById('school-pick').style.display='none';
+    document.getElementById('f-hint').innerHTML=`你已登入 <b>${schoolShort(SESSION.school)}</b>，<b>不需選擇學校</b> —— 只要填寫你要<b>上車的居住地區</b>即可。`;
+  } else {
+    const fb=document.getElementById('form-box'); if(fb) fb.style.display='none';
+    const ly=document.querySelector('.layout'); if(ly) ly.style.gridTemplateColumns='1fr';
+  }
+}
+async function enterApp(){
+  renderSessionBar();
+  initMap(); setupCascade(); setupPick(); setupForm(); applyRoleUI();
+  demands=loadDemandsLS(); if(!demands){ demands=await loadOrBuildSeed(); saveDemands(); }
+  setOverlayShow(true); setOverlay('載入路線中…','依你的身分整理可見路線');
+  await refresh();
+  setOverlayShow(false);
+}
+
+(async function start(){
+  try{
+    setOverlay('載入行政區與學校資料…');
+    await loadData();
+    document.getElementById('county-list').textContent=Object.keys(VILLAGES).length;
+    buildLogin();
+    setOverlayShow(false);
+    document.getElementById('login').style.display='flex';
+  }catch(e){
+    setOverlay('載入失敗 😥', '請確認 data/*.json 存在，且透過 http(s) 開啟（非 file://）。');
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
