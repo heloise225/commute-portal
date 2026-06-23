@@ -173,7 +173,26 @@
   #sessionbar .who{font-weight:700;}
   #sessionbar .role{background:rgba(255,255,255,.2); border-radius:999px; padding:2px 10px; font-size:12px; font-weight:700;}
   #sessionbar .scope{opacity:.92;}
-  #sessionbar .logout{margin-left:auto; background:#fff; color:var(--forest); border:0; border-radius:999px; padding:5px 14px; font-weight:700; font-size:12.5px; cursor:pointer;}
+  #sessionbar .rightgrp{margin-left:auto; display:flex; gap:8px;}
+  #sessionbar .cases-btn{background:var(--brand); color:#fff; border:0; border-radius:999px; padding:5px 14px; font-weight:700; font-size:12.5px; cursor:pointer;}
+  #sessionbar .cases-btn:hover{background:var(--brand-dark);}
+  #sessionbar .logout{background:#fff; color:var(--forest); border:0; border-radius:999px; padding:5px 14px; font-weight:700; font-size:12.5px; cursor:pointer;}
+
+  /* 真實案例彈窗 */
+  .modal{position:fixed; inset:0; z-index:10001; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(58,42,28,.6);}
+  .modal-card{width:680px; max-width:100%; max-height:90vh; overflow:auto; background:var(--bg); border-radius:22px; padding:22px 26px; box-shadow:0 18px 50px rgba(40,25,10,.4);}
+  .modal-head{display:flex; align-items:center; justify-content:space-between; font-family:"Inter","Noto Sans TC",sans-serif; font-weight:800; font-size:19px; color:var(--forest);}
+  .modal-x{border:0; background:var(--earth-soft); color:var(--earth); width:30px; height:30px; border-radius:50%; font-size:15px; cursor:pointer;}
+  .modal-sub{font-size:13px; color:var(--muted); margin:6px 0 14px;}
+  .case{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:13px 16px; margin-bottom:11px; box-shadow:0 2px 8px rgba(160,82,45,.06);}
+  .case h3{font-size:16px; color:var(--brand-dark); margin-bottom:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .case p{font-size:13.5px; line-height:1.6; margin:4px 0;}
+  .case .eg{background:var(--leaf-soft); border-radius:10px; padding:7px 10px; font-size:13px; color:var(--ink);}
+  .case.hot{border-color:var(--brand); box-shadow:0 3px 12px rgba(255,122,0,.16);}
+  .case .tag{background:var(--brand); color:#fff; font-size:11px; border-radius:999px; padding:2px 9px; font-weight:700;}
+  .case.todo{background:var(--earth-soft); border-style:dashed;}
+  .modal-foot{font-size:11.5px; color:var(--muted); margin-top:8px; line-height:1.6;}
+  .modal-foot a{color:var(--brand-dark);}
 
   @media (max-width:900px){
     .stats{grid-template-columns:repeat(2,1fr);}
@@ -226,6 +245,44 @@
 
 <!-- 身分列 -->
 <div id="sessionbar" style="display:none"></div>
+
+<!-- 真實案例彈窗（頁內，不另開分頁） -->
+<div id="cases" class="modal" style="display:none">
+  <div class="modal-card">
+    <div class="modal-head"><span>🚌 現行跨縣市・偏鄉通學交通做法</span><button class="modal-x" onclick="closeCases()">✕</button></div>
+    <p class="modal-sub">以下為台灣<b>現行</b>的偏鄉／跨縣市通學交通方案概覽。你之後提供的具體案例，我會再補充進來。</p>
+
+    <div class="case">
+      <h3>🚐 幸福巴士／幸福小黃（DRTS 需求反應式公共運輸）</h3>
+      <p>交通部公路局自 105 年推動、108 年更名「幸福巴士」。<b>不採固定班次／路線</b>，可<b>預約</b>、依在地需求以小巴或計程車彈性服務偏鄉。截至 2025 年 6 月，全台 <b>192 鄉鎮、499 條路線</b>。</p>
+      <p class="eg">案例：<b>台東海端鄉</b>（台東／高雄／花蓮三縣交界、轄內無高中職）開設「利稻村→海端村」<b>通學路線</b>（上課日行駛），與就醫路線分流。</p>
+    </div>
+
+    <div class="case hot">
+      <h3>📱 幸福巴士 2.0 ＋ 科技媒合平台 <span class="tag">與本平台最相近</span></h3>
+      <p>特點：<b>建置科技媒合平台</b>、跨部會資源整合、導入企業 CSR、客貨共載。</p>
+      <p class="eg">案例：高雄「<b>幸福共享高雄 GO</b>」平台（2022 上線），以大數據整合<b>乘客預約、車隊管理、車輛動態</b>，涵蓋美濃、杉林、六龜、內門、桃源、那瑪夏等東高雄 8 區。</p>
+    </div>
+
+    <div class="case">
+      <h3>🏫 教育部國教署・通學交通補助</h3>
+      <p>自 110 年起擴大補助<b>偏遠地區及「非山非市」高中職</b>：學校交通車每車每學年最高補助 <b>140 萬元</b>；學生自行搭乘大眾運輸，每生每月最高 <b>3,500 元</b>（每學期最多 10 個月）。</p>
+      <p class="eg">案例：高雄「<b>大旗美 9 區</b>」高中生，在補助下由<b>六龜高中</b>提供免費跨區校車。</p>
+    </div>
+
+    <div class="case">
+      <h3>🚌 公車進校園</h3>
+      <p>公路局自 104 年起，協調客運業者<b>調整路線或增加班次</b>服務學生通勤，減少自用機車事故。</p>
+    </div>
+
+    <div class="case todo">
+      <h3>➕ 你的案例（待補充）</h3>
+      <p>提供你蒐集的真實案例給我，我會把名稱、地點、做法與連結補在這裡。</p>
+    </div>
+
+    <p class="modal-foot">資料來源：<a href="https://www.thb.gov.tw/News_Content.aspx?n=87&s=59234" target="_blank" rel="noopener">交通部公路局・幸福巴士</a>、<a href="https://www.k12ea.gov.tw/" target="_blank" rel="noopener">教育部國教署</a>、<a href="https://www.ey.gov.tw/Page/5A8A0CB5B41DA11E/25b3096e-90ec-42cf-bd2b-5a0b65d409eb" target="_blank" rel="noopener">行政院・改善偏鄉交通</a>、地方政府與相關報導。</p>
+  </div>
+</div>
 
 <header class="hero">
   <!-- 插畫風橫幅：晨光、綠色山巒、蜿蜒山路、松樹、校車 -->
@@ -1059,9 +1116,15 @@ function renderSessionBar(){
   sb.innerHTML=`<span class="role">${ROLE_TXT[SESSION.role]}</span>`
     +`<span class="who">${SESSION.county} ｜ ${schoolShort(SESSION.school)}</span>`
     +`<span class="scope">🔒 ${scope}</span>`
-    +`<button class="logout" onclick="location.reload()">登出</button>`;
+    +`<span class="rightgrp"><button class="cases-btn" onclick="openCases()">🚌 真實案例</button>`
+    +`<button class="logout" onclick="location.reload()">登出</button></span>`;
   sb.style.display='flex';
 }
+function openCases(){ document.getElementById('cases').style.display='flex'; }
+function closeCases(){ document.getElementById('cases').style.display='none'; }
+// 點背景或按 Esc 關閉
+document.addEventListener('click',e=>{ if(e.target&&e.target.id==='cases') closeCases(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeCases(); });
 function applyRoleUI(){
   if(SESSION.role==='student'){
     document.getElementById('school-pick').style.display='none';

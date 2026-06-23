@@ -79,6 +79,162 @@
  },
  {
   "id": 7,
+  "resCounty": "彰化縣",
+  "resTown": "二林鎮",
+  "resVillage": "東和里",
+  "lat": 23.88963,
+  "lng": 120.3664,
+  "school": "市立臺中一中",
+  "schoolCounty": "臺中市",
+  "schoolLat": 24.15031,
+  "schoolLng": 120.68656,
+  "arrive": "07:00"
+ },
+ {
+  "id": 8,
+  "resCounty": "彰化縣",
+  "resTown": "二林鎮",
+  "resVillage": "南光里",
+  "lat": 23.89463,
+  "lng": 120.3784,
+  "school": "市立臺中女中",
+  "schoolCounty": "臺中市",
+  "schoolLat": 24.13611,
+  "schoolLng": 120.67723,
+  "arrive": "07:20"
+ },
+ {
+  "id": 9,
+  "resCounty": "彰化縣",
+  "resTown": "二林鎮",
+  "resVillage": "西平里",
+  "lat": 23.89963,
+  "lng": 120.3704,
+  "school": "市立臺中一中",
+  "schoolCounty": "臺中市",
+  "schoolLat": 24.15031,
+  "schoolLng": 120.68656,
+  "arrive": "07:20"
+ },
+ {
+  "id": 10,
+  "resCounty": "彰化縣",
+  "resTown": "二林鎮",
+  "resVillage": "北平里",
+  "lat": 23.90463,
+  "lng": 120.3824,
+  "school": "市立臺中女中",
+  "schoolCounty": "臺中市",
+  "schoolLat": 24.13611,
+  "schoolLng": 120.67723,
+  "arrive": "07:40"
+ },
+ {
+  "id": 11,
+  "resCounty": "彰化縣",
+  "resTown": "二林鎮",
+  "resVillage": "中西里",
+  "lat": 23.90963,
+  "lng": 120.3744,
+  "school": "市立臺中一中",
+  "schoolCounty": "臺中市",
+  "schoolLat": 24.15031,
+  "schoolLng": 120.68656,
+  "arrive": "07:20"
+ },
+ {
+  "id": 12,
+  "resCounty": "彰化縣",
+  "resTown": "二林鎮",
+  "resVillage": "廣興里",
+  "lat": 23.88963,
+  "lng": 120.3664,
+  "school": "市立臺中女中",
+  "schoolCounty": "臺中市",
+  "schoolLat": 24.13611,
+  "schoolLng": 120.67723,
+  "arrive": "07:00"
+ },
+ {
+  "id": 13,
+  "resCounty": "苗栗縣",
+  "resTown": "卓蘭鎮",
+  "resVillage": "中街里",
+  "lat": 24.30802,
+  "lng": 120.82856,
+  "school": "市立臺中一中",
+  "schoolCounty": "臺中市",
+  "schoolLat": 24.15031,
+  "schoolLng": 120.68656,
+  "arrive": "07:00"
+ },
+ {
+  "id": 14,
+  "resCounty": "苗栗縣",
+  "resTown": "卓蘭鎮",
+  "resVillage": "新厝里",
+  "lat": 24.31302,
+  "lng": 120.82056,
+  "school": "市立臺中女中",
+  "schoolCounty": "臺中市",
+  "schoolLat": 24.13611,
+  "schoolLng": 120.67723,
+  "arrive": "07:20"
+ },
+ {
+  "id": 15,
+  "resCounty": "苗栗縣",
+  "resTown": "卓蘭鎮",
+  "resVillage": "上新里",
+  "lat": 24.31802,
+  "lng": 120.83256,
+  "school": "市立臺中一中",
+  "schoolCounty": "臺中市",
+  "schoolLat": 24.15031,
+  "schoolLng": 120.68656,
+  "arrive": "07:20"
+ },
+ {
+  "id": 16,
+  "resCounty": "苗栗縣",
+  "resTown": "卓蘭鎮",
+  "resVillage": "豐田里",
+  "lat": 24.32302,
+  "lng": 120.82456,
+  "school": "市立臺中女中",
+  "schoolCounty": "臺中市",
+  "schoolLat": 24.13611,
+  "schoolLng": 120.67723,
+  "arrive": "07:40"
+ },
+ {
+  "id": 17,
+  "resCounty": "苗栗縣",
+  "resTown": "卓蘭鎮",
+  "resVillage": "西坪里",
+  "lat": 24.30302,
+  "lng": 120.81656,
+  "school": "市立臺中一中",
+  "schoolCounty": "臺中市",
+  "schoolLat": 24.15031,
+  "schoolLng": 120.68656,
+  "arrive": "07:20"
+ },
+ {
+  "id": 18,
+  "resCounty": "苗栗縣",
+  "resTown": "卓蘭鎮",
+  "resVillage": "景山里",
+  "lat": 24.30802,
+  "lng": 120.82856,
+  "school": "市立臺中女中",
+  "schoolCounty": "臺中市",
+  "schoolLat": 24.13611,
+  "schoolLng": 120.67723,
+  "arrive": "07:00"
+ },
+ {
+  "id": 19,
   "resCounty": "雲林縣",
   "resTown": "北港鎮",
   "resVillage": "東陽里",
@@ -91,7 +247,7 @@
   "arrive": "07:00"
  },
  {
-  "id": 8,
+  "id": 20,
   "resCounty": "雲林縣",
   "resTown": "北港鎮",
   "resVillage": "光民里",
@@ -104,7 +260,7 @@
   "arrive": "07:20"
  },
  {
-  "id": 9,
+  "id": 21,
   "resCounty": "雲林縣",
   "resTown": "北港鎮",
   "resVillage": "東華里",
@@ -117,7 +273,7 @@
   "arrive": "07:20"
  },
  {
-  "id": 10,
+  "id": 22,
   "resCounty": "雲林縣",
   "resTown": "元長鄉",
   "resVillage": "長南村",
@@ -130,7 +286,7 @@
   "arrive": "07:40"
  },
  {
-  "id": 11,
+  "id": 23,
   "resCounty": "雲林縣",
   "resTown": "元長鄉",
   "resVillage": "長北村",
@@ -143,7 +299,7 @@
   "arrive": "07:20"
  },
  {
-  "id": 12,
+  "id": 24,
   "resCounty": "雲林縣",
   "resTown": "元長鄉",
   "resVillage": "子茂村",
@@ -156,7 +312,7 @@
   "arrive": "07:00"
  },
  {
-  "id": 13,
+  "id": 25,
   "resCounty": "嘉義縣",
   "resTown": "民雄鄉",
   "resVillage": "東榮村",
@@ -169,7 +325,7 @@
   "arrive": "07:00"
  },
  {
-  "id": 14,
+  "id": 26,
   "resCounty": "嘉義縣",
   "resTown": "民雄鄉",
   "resVillage": "中樂村",
@@ -182,7 +338,7 @@
   "arrive": "07:20"
  },
  {
-  "id": 15,
+  "id": 27,
   "resCounty": "嘉義縣",
   "resTown": "民雄鄉",
   "resVillage": "西安村",
@@ -195,7 +351,7 @@
   "arrive": "07:20"
  },
  {
-  "id": 16,
+  "id": 28,
   "resCounty": "嘉義縣",
   "resTown": "新港鄉",
   "resVillage": "宮前村",
@@ -208,7 +364,7 @@
   "arrive": "07:40"
  },
  {
-  "id": 17,
+  "id": 29,
   "resCounty": "嘉義縣",
   "resTown": "新港鄉",
   "resVillage": "宮後村",
@@ -221,7 +377,7 @@
   "arrive": "07:20"
  },
  {
-  "id": 18,
+  "id": 30,
   "resCounty": "嘉義縣",
   "resTown": "新港鄉",
   "resVillage": "大興村",
@@ -234,12 +390,12 @@
   "arrive": "07:00"
  },
  {
-  "id": 19,
+  "id": 31,
   "resCounty": "嘉義縣",
   "resTown": "水上鄉",
   "resVillage": "水上村",
-  "lat": 23.4181,
-  "lng": 120.38994,
+  "lat": 23.4281,
+  "lng": 120.39394,
   "school": "國立新營高中",
   "schoolCounty": "臺南市",
   "schoolLat": 23.30894,
@@ -247,49 +403,23 @@
   "arrive": "07:00"
  },
  {
-  "id": 20,
+  "id": 32,
   "resCounty": "嘉義縣",
   "resTown": "水上鄉",
   "resVillage": "水頭村",
-  "lat": 23.4231,
-  "lng": 120.40194,
-  "school": "國立新營高工",
-  "schoolCounty": "臺南市",
-  "schoolLat": 23.31336,
-  "schoolLng": 120.31767,
-  "arrive": "07:20"
- },
- {
-  "id": 21,
-  "resCounty": "嘉義縣",
-  "resTown": "水上鄉",
-  "resVillage": "大堀村",
-  "lat": 23.4281,
-  "lng": 120.39394,
-  "school": "國立新營高中",
-  "schoolCounty": "臺南市",
-  "schoolLat": 23.30894,
-  "schoolLng": 120.31107,
-  "arrive": "07:20"
- },
- {
-  "id": 22,
-  "resCounty": "嘉義縣",
-  "resTown": "水上鄉",
-  "resVillage": "大崙村",
   "lat": 23.4331,
   "lng": 120.40594,
   "school": "國立新營高工",
   "schoolCounty": "臺南市",
   "schoolLat": 23.31336,
   "schoolLng": 120.31767,
-  "arrive": "07:40"
+  "arrive": "07:20"
  },
  {
-  "id": 23,
+  "id": 33,
   "resCounty": "嘉義縣",
   "resTown": "水上鄉",
-  "resVillage": "塗溝村",
+  "resVillage": "大堀村",
   "lat": 23.4381,
   "lng": 120.39794,
   "school": "國立新營高中",
@@ -299,12 +429,38 @@
   "arrive": "07:20"
  },
  {
-  "id": 24,
+  "id": 34,
+  "resCounty": "嘉義縣",
+  "resTown": "水上鄉",
+  "resVillage": "大崙村",
+  "lat": 23.4181,
+  "lng": 120.38994,
+  "school": "國立新營高工",
+  "schoolCounty": "臺南市",
+  "schoolLat": 23.31336,
+  "schoolLng": 120.31767,
+  "arrive": "07:40"
+ },
+ {
+  "id": 35,
+  "resCounty": "嘉義縣",
+  "resTown": "水上鄉",
+  "resVillage": "塗溝村",
+  "lat": 23.4231,
+  "lng": 120.40194,
+  "school": "國立新營高中",
+  "schoolCounty": "臺南市",
+  "schoolLat": 23.30894,
+  "schoolLng": 120.31107,
+  "arrive": "07:20"
+ },
+ {
+  "id": 36,
   "resCounty": "嘉義縣",
   "resTown": "水上鄉",
   "resVillage": "粗溪村",
-  "lat": 23.4181,
-  "lng": 120.38994,
+  "lat": 23.4281,
+  "lng": 120.39394,
   "school": "國立新營高工",
   "schoolCounty": "臺南市",
   "schoolLat": 23.31336,
@@ -312,12 +468,12 @@
   "arrive": "07:00"
  },
  {
-  "id": 25,
+  "id": 37,
   "resCounty": "雲林縣",
   "resTown": "林內鄉",
   "resVillage": "林南村",
-  "lat": 23.75091,
-  "lng": 120.61704,
+  "lat": 23.76091,
+  "lng": 120.62104,
   "school": "縣立田中高中",
   "schoolCounty": "彰化縣",
   "schoolLat": 23.85538,
@@ -325,12 +481,12 @@
   "arrive": "07:00"
  },
  {
-  "id": 26,
+  "id": 38,
   "resCounty": "雲林縣",
   "resTown": "林內鄉",
   "resVillage": "林中村",
-  "lat": 23.75591,
-  "lng": 120.60904,
+  "lat": 23.76591,
+  "lng": 120.61304,
   "school": "縣立田中高中",
   "schoolCounty": "彰化縣",
   "schoolLat": 23.85538,
@@ -338,12 +494,12 @@
   "arrive": "07:20"
  },
  {
-  "id": 27,
+  "id": 39,
   "resCounty": "雲林縣",
   "resTown": "林內鄉",
   "resVillage": "林南村",
-  "lat": 23.76091,
-  "lng": 120.62104,
+  "lat": 23.74591,
+  "lng": 120.60504,
   "school": "市立臺中一中",
   "schoolCounty": "臺中市",
   "schoolLat": 24.15031,
@@ -351,12 +507,12 @@
   "arrive": "07:20"
  },
  {
-  "id": 28,
+  "id": 40,
   "resCounty": "雲林縣",
   "resTown": "林內鄉",
   "resVillage": "林中村",
-  "lat": 23.76591,
-  "lng": 120.61304,
+  "lat": 23.75091,
+  "lng": 120.61704,
   "school": "市立臺中女中",
   "schoolCounty": "臺中市",
   "schoolLat": 24.13611,
